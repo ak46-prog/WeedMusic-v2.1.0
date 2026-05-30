@@ -48,3 +48,24 @@ Stage Summary:
 - INP optimization via setTimeout(0) macrotask offloading in header
 - React Portal (z-[9999]) for voice overlay guarantees proper stacking
 - Build passes successfully
+---
+Task ID: 1
+Agent: Main Agent
+Task: Enterprise architecture refactor with 3-tier voice search, Wispr Flow animations, 50 theme presets
+
+Work Log:
+- Read and analyzed full codebase: globals.css (762→949 lines), voice-search.tsx, music-player.tsx, audio-manager.tsx, header.tsx, hero-banner.tsx, theme-selector.tsx, theme-presets.ts, store.ts, package.json
+- Researched Wispr Flow (wisprflow.ai) animation patterns: pill-shaped voice UI, thin 2px waveform bars, expanding ring pulses, blurred glow backdrop, 0.2s ease transitions
+- Researched Visme color schemes: extracted 50 palettes with hex codes (already in theme-presets.ts)
+- Created `/src/lib/pitch-detect.ts`: Autocorrelation-based pitch detection (~2KB vs Pitchfinder.js ~5KB), exports detectPitch() and setupPitchDetection()
+- Created `/src/app/api/speech-to-text/route.ts`: Server-side 3-tier cloud API fallback (Deepgram → AssemblyAI → Google Cloud), 10s timeout per provider, FormData audio upload, CORS support
+- Updated `/src/components/voice-search.tsx`: 3-tier fallback (Native Web Speech API → Cloud API → Pitch Detection), tier indicator badges, processing state with spinner, pitch info display, data-tier/data-state attributes, setTimeout(0) INP fixes
+- Updated `/src/app/globals.css`: Added enterprise design tokens (motion, spacing, shadow, z-index), theme preset CSS custom properties, Wispr Flow Pill UI classes (flow-pill-wrapper, flow-pill, flow-pill-bars, flow-pill-bar, flow-pill-dot, flow-blur-glow), tier badge classes (flow-tier-badge--native/cloud/pitch), flow-spinner, flowCharWave keyframe, content-visibility utility, prefers-color-scheme fallback
+- Built successfully with Turbopack in 8.9s
+- Deployed to Vercel production
+
+Stage Summary:
+- All 3 user requirements implemented: (1) 3-tier voice search, (2) Wispr Flow animations, (3) 50 theme presets (already existed, enhanced with CSS tokens)
+- Production URL: https://my-project-sooty-one-42.vercel.app
+- New API endpoint: /api/speech-to-text (requires DEEPGRAM_API_KEY, ASSEMBLYAI_API_KEY, or GOOGLE_CLOUD_API_KEY env vars)
+- Enterprise refactor items completed: GPU-only animations, XSS defense, INP optimization, fluid clamp() scaling, audio memory sanitation (already in audio-manager.tsx), skeleton loaders, content-visibility, prefers-color-scheme

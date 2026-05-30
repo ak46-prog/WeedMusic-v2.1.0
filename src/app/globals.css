@@ -135,6 +135,50 @@
   --font-size-heading: clamp(1.5rem, 2vw + 1rem, 3.5rem);
 }
 
+/* ---- Theme Preset CSS Custom Properties (applied by JS) ---- */
+/* These are the base defaults — overridden by theme-presets.ts via style.setProperty */
+:root {
+  --theme-primary-h: 25;
+  --theme-primary-s: 0.2;
+  --theme-primary-l: 0.65;
+  --theme-is-light: 0;
+}
+
+/* ---- Enterprise Design Tokens ---- */
+:root {
+  /* Enterprise Motion Tokens */
+  --duration-instant: 0.1s;
+  --duration-fast: 0.2s;
+  --duration-normal: 0.3s;
+  --duration-slow: 0.5s;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Enterprise Spacing Tokens */
+  --space-xs: clamp(0.25rem, 0.5vw, 0.5rem);
+  --space-sm: clamp(0.5rem, 1vw, 1rem);
+  --space-md: clamp(1rem, 1.5vw, 1.5rem);
+  --space-lg: clamp(1.5rem, 2vw, 2.5rem);
+  --space-xl: clamp(2rem, 3vw, 4rem);
+
+  /* Enterprise Shadow Tokens */
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.05);
+  --shadow-md: 0 4px 12px oklch(0 0 0 / 0.1);
+  --shadow-lg: 0 12px 30px oklch(0 0 0 / 0.15);
+  --shadow-glow: 0 0 20px oklch(0.65 0.2 55 / 0.15);
+
+  /* Enterprise Z-Index Scale */
+  --z-base: 0;
+  --z-elevated: 10;
+  --z-sticky: 40;
+  --z-overlay: 50;
+  --z-modal: 100;
+  --z-popover: 200;
+  --z-toast: 300;
+  --z-voice: 9999;
+}
+
 /* ---- System Font Stack (Zero FOUT) ---- */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -758,4 +802,148 @@ html.theme-transitioning *::after {
 .theme-category-tab.active {
   background: oklch(0.65 0.2 55);
   color: white;
+}
+
+/* ==========================================================================
+   ENHANCED WISPR FLOW ANIMATIONS — Pill Voice UI
+   Inspired by wisprflow.ai: pill-shaped voice UI, thin waveform bars,
+   expanding ring pulses, blurred glow backdrop, smooth transitions
+   ========================================================================== */
+
+/* ---- Wispr Flow Pill Voice UI (Bottom Center Floating) ---- */
+.flow-pill-wrapper {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateZ(0);
+  z-index: 10000;
+  animation: flowSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.flow-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  border-radius: 100px;
+  background: oklch(0.1 0 0);
+  border: 1px solid oklch(1 0 0 / 15%);
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.5), 0 0 60px oklch(0.65 0.2 55 / 0.1);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  will-change: transform, box-shadow;
+}
+
+.flow-pill:hover {
+  transform: translateY(-2px) translateZ(0);
+  box-shadow: 0 12px 40px oklch(0 0 0 / 0.6), 0 0 80px oklch(0.65 0.2 55 / 0.15);
+}
+
+/* Wispr-style thin waveform bars inside pill */
+.flow-pill-bars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 20px;
+}
+
+.flow-pill-bar {
+  width: 2px;
+  height: 12px;
+  border-radius: 1000px;
+  background: oklch(0.65 0.2 55);
+  transform-origin: bottom;
+  will-change: transform;
+  transition: transform 0.2s ease-out;
+}
+
+.flow-pill-bar.active {
+  animation: flowWaveBar 0.6s ease-in-out infinite;
+}
+
+/* Dot indicator in pill */
+.flow-pill-dot {
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 50%;
+  background: oklch(0.65 0.2 55 / 0.8);
+  transition: opacity 0.2s ease;
+}
+
+/* Wispr-style blurred glow backdrop */
+.flow-blur-glow {
+  position: absolute;
+  border-radius: 100%;
+  filter: blur(5px);
+  pointer-events: none;
+  will-change: transform;
+  animation: flowOrbPulse 3s ease-in-out infinite;
+}
+
+/* Tier badge in voice overlay */
+.flow-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.flow-tier-badge--native {
+  background: oklch(0.65 0.2 55 / 0.15);
+  color: oklch(0.65 0.2 55);
+  border: 1px solid oklch(0.65 0.2 55 / 0.3);
+}
+
+.flow-tier-badge--cloud {
+  background: oklch(0.65 0.2 250 / 0.15);
+  color: oklch(0.65 0.2 250);
+  border: 1px solid oklch(0.65 0.2 250 / 0.3);
+}
+
+.flow-tier-badge--pitch {
+  background: oklch(0.75 0.18 80 / 0.15);
+  color: oklch(0.75 0.18 80);
+  border: 1px solid oklch(0.75 0.18 80 / 0.3);
+}
+
+/* Processing spinner */
+@keyframes flowSpinner {
+  from { transform: rotate(0deg) translateZ(0); }
+  to { transform: rotate(360deg) translateZ(0); }
+}
+.flow-spinner {
+  animation: flowSpinner 0.8s linear infinite;
+  will-change: transform;
+}
+
+/* Wispr Flow character wave effect (for hover on buttons) */
+@keyframes flowCharWave {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+
+/* ---- Content Visibility (offscreen rendering optimization) ---- */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
+}
+
+/* ---- Auto Theme via prefers-color-scheme (zero-JS fallback) ---- */
+@media (prefers-color-scheme: light) {
+  :root:not([style*="--background"]) {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([style*="--background"]) {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+  }
 }

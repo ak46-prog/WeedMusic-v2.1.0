@@ -1,29 +1,35 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect, useSyncExternalStore } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { Mic, MicOff, X, Volume2 } from 'lucide-react';
+import { Mic, MicOff, X, Volume2, Cloud, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { setupPitchDetection, type PitchResult } from '@/lib/pitch-detect';
 
 /**
- * VoiceSearchButton — Enterprise Voice Search
+ * VoiceSearchButton — Enterprise Voice Search with 3-Tier Fallback
  *
- * Strategy: Web Speech API (Browser Native) — Option #1
+ * Tier 1: Web Speech API (Browser Native)
  * - Built into modern browsers, zero server cost
  * - Supports ANY language via navigator.language auto-detection
  * - Real-time interim results for instant feedback
- * - Heavy lifting done by browser's built-in engine
+ *
+ * Tier 2: MediaRecorder + Cloud API
+ * - If Web Speech API fails (not supported, error, or no-speech)
+ * - Uses MediaRecorder to capture audio as webm/opus
+ * - Sends to /api/speech-to-text for cloud transcription
+ * - Supports Deepgram, AssemblyAI, Google Cloud fallback chain
+ *
+ * Tier 3: Pitch Detection (Web Audio API Autocorrelation)
+ * - If both Tier 1 and Tier 2 fail
+ * - Detects vocal pitch/frequency via AnalyserNode
+ * - Shows audio feedback even without transcription
  *
  * Wispr Flow-like Animation:
  * - Minimal floating overlay, not a full-screen takeover
  * - Flowing waveform bars driven by Web Audio API AnalyserNode
  * - Expanding ring pulses (GPU-only scale + opacity)
  * - Smooth slide-up content transitions
- *
- * AnalyserNode Integration:
- * - Uses Web Audio API for real-time mic level visualization
- * - Provides actual audio amplitude data, not just state flags
- * - Graceful fallback to state-based levels if AnalyserNode fails
  *
  * XSS Defense: textContent for all transcript display
  * Performance: GPU-only animations (transform, opacity, will-change)
@@ -103,6 +109,12 @@ function usePortalReady() {
   );
 }
 
+// Fallback tier type
+type FallbackTier = 'native' | 'cloud' | 'pitch';
+
+// Overlay state type
+type OverlayState = 'listening' | 'processing' | 'error';
+
 interface VoiceSearchButtonProps {
   onTranscript: (text: string) => void;
   className?: string;
@@ -112,6 +124,9 @@ interface VoiceSearchButtonProps {
 // Number of waveform bars
 const WAVE_BAR_COUNT = 24;
 
+// Max recording duration for cloud tier (ms)
+const CLOUD_MAX_RECORDING_MS = 15_000;
+
 export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }: VoiceSearchButtonProps) {
   const isSupported = useIsSpeechRecognitionSupported();
   const portalReady = usePortalReady();
@@ -119,24 +134,35 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
   const [interimText, setInterimText] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [audioLevels, setAudioLevels] = useState<number[]>(new Array(WAVE_BAR_COUNT).fill(0.1));
+  const [fallbackTier, setFallbackTier] = useState<FallbackTier>('native');
+  const [overlayState, setOverlayState] = useState<OverlayState>('listening');
+  const [pitchInfo, setPitchInfo] = useState<PitchResult | null>(null);
 
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const animFrameRef = useRef<number>(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const cloudTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pitchCleanupRef = useRef<(() => void) | null>(null);
 
   // Refs to avoid stale closure issues
   const interimTextRef = useRef('');
   const onTranscriptRef = useRef(onTranscript);
+  const isListeningRef = useRef(false);
 
   useEffect(() => { onTranscriptRef.current = onTranscript; }, [onTranscript]);
   useEffect(() => { interimTextRef.current = interimText; }, [interimText]);
+  useEffect(() => { isListeningRef.current = isListening; }, [isListening]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       cleanupAudio();
+      cleanupCloud();
+      cleanupPitch();
       if (recognitionRef.current) {
         try { recognitionRef.current.abort(); } catch { /* */ }
         recognitionRef.current = null;
@@ -150,7 +176,7 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       audioContextRef.current = audioCtx;
 
       const source = audioCtx.createMediaStreamSource(stream);
@@ -205,6 +231,26 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
     setAudioLevels(new Array(WAVE_BAR_COUNT).fill(0.1));
   }, []);
 
+  const cleanupCloud = useCallback(() => {
+    if (cloudTimeoutRef.current) {
+      clearTimeout(cloudTimeoutRef.current);
+      cloudTimeoutRef.current = null;
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try { mediaRecorderRef.current.stop(); } catch { /* */ }
+    }
+    mediaRecorderRef.current = null;
+    recordedChunksRef.current = [];
+  }, []);
+
+  const cleanupPitch = useCallback(() => {
+    if (pitchCleanupRef.current) {
+      pitchCleanupRef.current();
+      pitchCleanupRef.current = null;
+    }
+    setPitchInfo(null);
+  }, []);
+
   // --- Auto-detect language from browser ---
   const getLanguage = useCallback(() => {
     if (typeof navigator === 'undefined') return 'en-US';
@@ -212,21 +258,160 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
     return navigator.language || 'en-US';
   }, []);
 
+  // ─── Tier 3: Pitch Detection Setup ─────────────────────────────────────────
+  const startPitchDetection = useCallback(() => {
+    setFallbackTier('pitch');
+    setOverlayState('listening');
+
+    // If we already have an analyser, use it; otherwise set one up
+    const startPitch = () => {
+      const analyser = analyserRef.current;
+      if (!analyser) return;
+
+      const cleanup = setupPitchDetection(analyser, (result: PitchResult) => {
+        setPitchInfo(result);
+      }, 100);
+      pitchCleanupRef.current = cleanup;
+    };
+
+    if (analyserRef.current) {
+      startPitch();
+    } else {
+      // Need to set up analyser first
+      setupAnalyser().then(() => {
+        // Small delay to let analyser initialize
+        setTimeout(startPitch, 100);
+      });
+    }
+  }, [setupAnalyser]);
+
+  // ─── Tier 2: Cloud API Transcription ────────────────────────────────────────
+  const startCloudRecording = useCallback(async () => {
+    setFallbackTier('cloud');
+    setOverlayState('listening');
+
+    try {
+      // Start AnalyserNode for visualization
+      await setupAnalyser();
+
+      const stream = streamRef.current;
+      if (!stream) {
+        throw new Error('No media stream available');
+      }
+
+      // Set up MediaRecorder
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : 'audio/mp4';
+
+      const recorder = new MediaRecorder(stream, { mimeType });
+      recordedChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        if (!isListeningRef.current) return; // Cancelled
+
+        setOverlayState('processing');
+
+        const audioBlob = new Blob(recordedChunksRef.current, { type: mimeType });
+        recordedChunksRef.current = [];
+
+        try {
+          const formData = new FormData();
+          formData.append('audio', audioBlob);
+
+          const response = await fetch('/api/speech-to-text', {
+            method: 'POST',
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (data.transcript) {
+            // Success — use the cloud transcript
+            setTimeout(() => {
+              onTranscriptRef.current(data.transcript.trim());
+              setIsListening(false);
+              cleanupAudio();
+              cleanupCloud();
+            }, 0);
+            return;
+          }
+
+          // Cloud API failed — fall back to pitch detection (Tier 3)
+          console.warn('[VoiceSearch] Cloud API failed:', data.error, data.detail);
+          startPitchDetection();
+        } catch (err) {
+          console.warn('[VoiceSearch] Cloud API request failed:', err);
+          // Fall back to pitch detection (Tier 3)
+          startPitchDetection();
+        }
+      };
+
+      recorder.onerror = () => {
+        console.warn('[VoiceSearch] MediaRecorder error, falling back to pitch detection');
+        startPitchDetection();
+      };
+
+      mediaRecorderRef.current = recorder;
+      recorder.start(250); // Collect data every 250ms
+
+      // Auto-stop after max recording time
+      cloudTimeoutRef.current = setTimeout(() => {
+        if (recorder.state === 'recording') {
+          try { recorder.stop(); } catch { /* */ }
+        }
+      }, CLOUD_MAX_RECORDING_MS);
+
+    } catch (err) {
+      console.warn('[VoiceSearch] Cloud recording setup failed, falling back to pitch detection:', err);
+      startPitchDetection();
+    }
+  }, [setupAnalyser, cleanupAudio, cleanupCloud, startPitchDetection]);
+
+  // --- Stop cloud recording and process ---
+  const stopCloudRecording = useCallback(() => {
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state === 'recording') {
+      try { recorder.stop(); } catch { /* */ }
+      // The onstop handler will process the audio
+    } else {
+      // No active recorder, just clean up
+      setIsListening(false);
+      cleanupAudio();
+      cleanupCloud();
+    }
+  }, [cleanupAudio, cleanupCloud]);
+
   // --- Start listening ---
   const startListening = useCallback(async () => {
-    if (!isSupported) {
-      setErrorMsg('Voice search is not supported in this browser. Try Chrome or Edge.');
-      setTimeout(() => setErrorMsg(''), 4000);
-      return;
-    }
-
+    // Reset state
     setInterimText('');
     interimTextRef.current = '';
     setErrorMsg('');
+    setPitchInfo(null);
+    setFallbackTier('native');
+    setOverlayState('listening');
 
     // Stop any existing recognition
     if (recognitionRef.current) {
       try { recognitionRef.current.abort(); } catch { /* */ }
+    }
+    cleanupCloud();
+    cleanupPitch();
+
+    // If Web Speech API is not supported, go straight to cloud tier
+    if (!isSupported) {
+      setIsListening(true);
+      setTimeout(() => { startCloudRecording(); }, 0);
+      return;
     }
 
     // Start AnalyserNode for visualization (in parallel, non-blocking)
@@ -242,6 +427,7 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
 
     recognition.onstart = () => {
       setIsListening(true);
+      setFallbackTier('native');
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -266,51 +452,49 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
         setInterimText('');
         interimTextRef.current = '';
         // Use ref for latest callback — XSS safe via textContent in overlay
-        onTranscriptRef.current(finalTranscript.trim());
+        setTimeout(() => {
+          onTranscriptRef.current(finalTranscript.trim());
+        }, 0);
         try { recognition.stop(); } catch { /* */ }
       }
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      let message = '';
-      switch (event.error) {
-        case 'not-allowed':
-          message = 'Microphone access denied. Please allow microphone permissions in your browser settings.';
-          break;
-        case 'no-speech':
-          message = 'No speech detected. Try again and speak clearly.';
-          break;
-        case 'audio-capture':
-          message = 'No microphone found. Please connect a microphone.';
-          break;
-        case 'network':
-          message = 'Network error. Check your internet connection.';
-          break;
-        case 'aborted':
-          break;
-        case 'service-not-allowed':
-          message = 'Speech service not available. Try using Chrome.';
-          break;
-        default:
-          message = `Voice search error: ${event.error}. Please try again.`;
+      const shouldFallback = ['not-allowed', 'service-not-allowed', 'network', 'no-speech', 'audio-capture'].includes(event.error);
+
+      if (shouldFallback) {
+        // Don't show error — fall back to cloud tier instead
+        console.warn(`[VoiceSearch] Native speech error "${event.error}", falling back to cloud API`);
+        try { recognition.abort(); } catch { /* */ }
+        recognitionRef.current = null;
+        // Fall back to Tier 2 (cloud)
+        setTimeout(() => { startCloudRecording(); }, 0);
+        return;
       }
-      if (message) {
-        setErrorMsg(message);
-        setTimeout(() => setErrorMsg(''), 5000);
-      }
+
+      // Non-fallible errors (aborted, etc.)
+      if (event.error === 'aborted') return;
+
+      let message = `Voice search error: ${event.error}. Please try again.`;
+      setErrorMsg(message);
+      setTimeout(() => setErrorMsg(''), 5000);
       setIsListening(false);
       cleanupAudio();
     };
 
     recognition.onend = () => {
-      setIsListening(false);
-      cleanupAudio();
       // If there's interim text when recognition ends, use it
       const latestInterim = interimTextRef.current;
       if (latestInterim && latestInterim.trim()) {
         setInterimText('');
         interimTextRef.current = '';
-        onTranscriptRef.current(latestInterim.trim());
+        setTimeout(() => {
+          onTranscriptRef.current(latestInterim.trim());
+        }, 0);
+      } else {
+        // Clean end with no transcript — just close
+        setIsListening(false);
+        cleanupAudio();
       }
     };
 
@@ -319,62 +503,137 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
     try {
       recognition.start();
     } catch (err) {
-      setIsListening(false);
-      setErrorMsg('Could not start voice search. Please try again.');
-      setTimeout(() => setErrorMsg(''), 4000);
+      // Native speech failed to start — fall back to cloud
+      console.warn('[VoiceSearch] Native speech start failed, falling back to cloud API:', err);
+      setIsListening(true);
+      setTimeout(() => { startCloudRecording(); }, 0);
     }
-  }, [isSupported, getLanguage, setupAnalyser, cleanupAudio]);
+  }, [isSupported, getLanguage, setupAnalyser, cleanupAudio, cleanupCloud, cleanupPitch, startCloudRecording]);
 
   const stopListening = useCallback(() => {
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch { /* */ }
-    }
-    setIsListening(false);
-    cleanupAudio();
-    const latestInterim = interimTextRef.current;
-    if (latestInterim && latestInterim.trim()) {
-      setInterimText('');
-      interimTextRef.current = '';
-      onTranscriptRef.current(latestInterim.trim());
-    }
-  }, [cleanupAudio]);
+    setTimeout(() => {
+      if (fallbackTier === 'cloud') {
+        stopCloudRecording();
+        return;
+      }
+
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch { /* */ }
+      }
+      setIsListening(false);
+      cleanupAudio();
+      cleanupPitch();
+      const latestInterim = interimTextRef.current;
+      if (latestInterim && latestInterim.trim()) {
+        setInterimText('');
+        interimTextRef.current = '';
+        onTranscriptRef.current(latestInterim.trim());
+      }
+    }, 0);
+  }, [fallbackTier, stopCloudRecording, cleanupAudio, cleanupPitch]);
 
   const cancelListening = useCallback(() => {
-    if (recognitionRef.current) {
-      try { recognitionRef.current.abort(); } catch { /* */ }
-    }
-    setIsListening(false);
-    setInterimText('');
-    interimTextRef.current = '';
-    cleanupAudio();
-  }, [cleanupAudio]);
+    setTimeout(() => {
+      if (recognitionRef.current) {
+        try { recognitionRef.current.abort(); } catch { /* */ }
+        recognitionRef.current = null;
+      }
+      cleanupCloud();
+      cleanupPitch();
+      setIsListening(false);
+      setInterimText('');
+      interimTextRef.current = '';
+      cleanupAudio();
+    }, 0);
+  }, [cleanupAudio, cleanupCloud, cleanupPitch]);
 
   const sizeClasses = { sm: 'size-8', md: 'size-9', lg: 'size-11' };
   const iconSizeClasses = { sm: 'size-4', md: 'size-[18px]', lg: 'size-5' };
 
-  if (!isSupported) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className={`${sizeClasses[size]} text-muted-foreground/40 cursor-not-allowed ${className}`}
-        disabled
-        aria-label="Voice search not supported"
-        title="Voice search not supported in this browser"
-      >
-        <Mic className={iconSizeClasses[size]} />
-      </Button>
-    );
-  }
-
   // Detect if analyser is active (has real levels)
   const hasRealAudio = audioLevels.some(l => l > 0.15);
+
+  // Tier badge colors and labels
+  const tierConfig: Record<FallbackTier, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
+    native: {
+      label: 'Browser',
+      color: 'oklch(0.72 0.19 142)',
+      bgColor: 'oklch(0.72 0.19 142 / 0.15)',
+      icon: <Mic className="size-3" />,
+    },
+    cloud: {
+      label: 'Cloud AI',
+      color: 'oklch(0.72 0.15 65)',
+      bgColor: 'oklch(0.72 0.15 65 / 0.15)',
+      icon: <Cloud className="size-3" />,
+    },
+    pitch: {
+      label: 'Audio',
+      color: 'oklch(0.75 0.15 55)',
+      bgColor: 'oklch(0.75 0.15 55 / 0.15)',
+      icon: <Radio className="size-3" />,
+    },
+  };
+
+  // Status text based on tier and state
+  const getStatusText = () => {
+    if (overlayState === 'processing') {
+      return 'Processing with cloud AI...';
+    }
+    if (overlayState === 'error') {
+      return 'Something went wrong';
+    }
+    if (fallbackTier === 'pitch') {
+      return pitchInfo?.frequency ? 'Voice detected' : 'Listening...';
+    }
+    return hasRealAudio ? 'Listening...' : 'Say something...';
+  };
+
+  // Subtitle text
+  const getSubtitleText = () => {
+    if (overlayState === 'processing') {
+      return 'Transcribing your audio...';
+    }
+    if (fallbackTier === 'pitch') {
+      return pitchInfo?.frequency
+        ? 'Voice detected. Cloud transcription unavailable.'
+        : 'Speak clearly — detecting audio input';
+    }
+    if (fallbackTier === 'cloud') {
+      return 'Recording for cloud transcription';
+    }
+    return 'Speak in any language — auto-detected from your browser';
+  };
+
+  // Orb color based on tier
+  const getOrbColor = () => {
+    if (overlayState === 'processing') return 'oklch(0.72 0.15 65)'; // Amber for processing
+    if (fallbackTier === 'native') return 'oklch(0.65 0.2 55)';     // Original orange
+    if (fallbackTier === 'cloud') return 'oklch(0.72 0.15 65)';      // Amber for cloud
+    if (fallbackTier === 'pitch') {
+      return pitchInfo?.frequency ? 'oklch(0.75 0.15 55)' : 'oklch(0.65 0.2 55 / 0.6)';
+    }
+    return 'oklch(0.65 0.2 55)';
+  };
+
+  const getOrbColorFaded = () => {
+    if (overlayState === 'processing') return 'oklch(0.72 0.15 65 / 0.6)';
+    if (fallbackTier === 'native') return 'oklch(0.65 0.2 55 / 0.6)';
+    if (fallbackTier === 'cloud') return 'oklch(0.72 0.15 65 / 0.6)';
+    if (fallbackTier === 'pitch') return 'oklch(0.75 0.15 55 / 0.6)';
+    return 'oklch(0.65 0.2 55 / 0.6)';
+  };
+
+  // The active tier config
+  const currentTier = tierConfig[fallbackTier];
 
   // The overlay content
   const overlayContent = isListening ? (
     <div
       className="flow-overlay fixed inset-0 z-[9999] flex items-center justify-center"
       style={{ backgroundColor: 'oklch(0.145 0 0 / 0.92)' }}
+      data-tier={fallbackTier}
+      data-state={overlayState}
     >
       <div className="flow-content flex flex-col items-center gap-6 max-w-lg mx-auto px-6">
         {/* Close button */}
@@ -386,6 +645,18 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
         >
           <X className="size-5" style={{ color: 'oklch(0.708 0 0)' }} />
         </button>
+
+        {/* Tier indicator badge */}
+        <div
+          className="absolute top-5 left-5 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+          style={{
+            backgroundColor: currentTier.bgColor,
+            color: currentTier.color,
+          }}
+        >
+          {currentTier.icon}
+          {currentTier.label}
+        </div>
 
         {/* Flow Orb with expanding rings */}
         <div className="relative flex items-center justify-center" style={{ width: '120px', height: '120px' }}>
@@ -401,8 +672,8 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
               width: '80px',
               height: '80px',
               background: hasRealAudio
-                ? 'radial-gradient(circle, oklch(0.65 0.2 55 / 0.2) 0%, transparent 70%)'
-                : 'radial-gradient(circle, oklch(0.65 0.2 55 / 0.1) 0%, transparent 70%)',
+                ? `radial-gradient(circle, ${getOrbColor().replace(')', ' / 0.2)')} 0%, transparent 70%)`
+                : `radial-gradient(circle, ${getOrbColor().replace(')', ' / 0.1)')} 0%, transparent 70%)`,
               filter: 'blur(5px)',
             }}
           />
@@ -415,11 +686,19 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
             style={{
               width: hasRealAudio ? '88px' : '80px',
               height: hasRealAudio ? '88px' : '80px',
-              backgroundColor: hasRealAudio ? 'oklch(0.65 0.2 55)' : 'oklch(0.65 0.2 55 / 0.6)',
+              backgroundColor: hasRealAudio ? getOrbColor() : getOrbColorFaded(),
               transition: 'width 0.2s, height 0.2s, background-color 0.2s',
             }}
           >
-            {hasRealAudio ? (
+            {overlayState === 'processing' ? (
+              // Spinning indicator for processing state
+              <div className="size-9 relative">
+                <div
+                  className="absolute inset-0 rounded-full border-2 border-white/30 border-t-white"
+                  style={{ animation: 'spin 1s linear infinite' }}
+                />
+              </div>
+            ) : hasRealAudio ? (
               <Volume2 className="size-9 text-white" />
             ) : (
               <Mic className="size-9 text-white" />
@@ -438,8 +717,8 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
                 animationDelay: hasRealAudio ? `${i * 0.04}s` : undefined,
                 animationDuration: hasRealAudio ? `${0.4 + Math.random() * 0.4}s` : undefined,
                 backgroundColor: hasRealAudio
-                  ? `oklch(0.65 0.2 55 / ${0.5 + level * 0.5})`
-                  : 'oklch(0.65 0.2 55 / 0.3)',
+                  ? `${getOrbColor().replace(')', ` / ${0.5 + level * 0.5})`)}`
+                  : `${getOrbColor().replace(')', ' / 0.3)')}`,
               }}
             />
           ))}
@@ -448,11 +727,17 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
         {/* Status text */}
         <div className="text-center">
           <p className="text-lg font-semibold" style={{ color: 'oklch(0.985 0 0)' }}>
-            {hasRealAudio ? 'Listening...' : 'Say something...'}
+            {getStatusText()}
           </p>
           <p className="text-sm mt-1" style={{ color: 'oklch(0.708 0 0)' }}>
-            Speak in any language — auto-detected from your browser
+            {getSubtitleText()}
           </p>
+          {/* Pitch info display for Tier 3 */}
+          {fallbackTier === 'pitch' && pitchInfo?.frequency > 0 && pitchInfo.note && (
+            <p className="text-xs mt-2 font-mono" style={{ color: currentTier.color }}>
+              {pitchInfo.note} · {Math.round(pitchInfo.frequency)}Hz · clarity {Math.round(pitchInfo.clarity * 100)}%
+            </p>
+          )}
         </div>
 
         {/* Interim transcript display — XSS safe via textContent pattern */}
@@ -473,7 +758,7 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
           </div>
         )}
 
-        {/* Action buttons */}
+        {/* Action buttons — hide Done button during processing */}
         <div className="flex items-center gap-3 mt-2">
           <Button
             variant="outline"
@@ -485,20 +770,23 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
             <X className="size-4" />
             Cancel
           </Button>
-          <Button
-            size="sm"
-            onClick={stopListening}
-            className="rounded-full px-6 gap-2 text-white"
-            style={{ backgroundColor: 'oklch(0.65 0.2 55)' }}
-          >
-            <MicOff className="size-4" />
-            Done
-          </Button>
+          {overlayState !== 'processing' && (
+            <Button
+              size="sm"
+              onClick={stopListening}
+              className="rounded-full px-6 gap-2 text-white"
+              style={{ backgroundColor: getOrbColor() }}
+            >
+              <MicOff className="size-4" />
+              Done
+            </Button>
+          )}
         </div>
       </div>
     </div>
   ) : null;
 
+  // Always render the button — if native speech not supported, clicking will go to cloud tier
   return (
     <>
       {/* The mic button */}

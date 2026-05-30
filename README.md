@@ -2,6 +2,8 @@
 
 **Ad-free music streaming app with YouTube integration** — Immersive 3D UI with Weed Grass decorations, Full-Screen layout, Enhanced Kids Mode & Multi-Layer Audio Streaming
 
+> 🔧 **MIC FIX** — Microphone now works on **ALL browsers** (Chrome, Firefox, Safari, Edge, mobile). See [Voice & Mic Architecture](#voice--mic-architecture) below.
+
 <p align="center">
   <a href="https://ak46-prog.github.io/WEEDMUSIC/">
     <img src="https://img.shields.io/badge/LAUNCH_PLAYER-Open_Now-orange?style=for-the-badge&logo=music" alt="Launch WeedMusic Player" />
@@ -15,11 +17,14 @@
 
 ## What's New in v2.2.0
 
+- 🔧 **MIC FIX: Works on ALL Browsers** — Microphone & voice search now works on Chrome, Firefox, Safari, Edge, and mobile. 3-tier fallback: Web Speech API → MediaRecorder + Cloud STT → Pitch Detection
+- **Neumorphic Music Icon Fallback** — Broken thumbnails replaced with beautiful 3D neumorphic ♫ music buttons (8-color palette, heartbeat animation)
 - **Full-Screen Layout** — Content covers the entire screen width with collapsible sidebar overlay
 - **3D Aesthetic Player** — Glass morphism, perspective album art, gradient buttons with depth shadows
 - **Weed Grass Decorations** — Animated grass blades, floating leaf particles, green gradient borders throughout
 - **Enhanced Kids Mode** — 6 rhyme categories (Nursery, Lullaby, Action, Animal, ABC, Fun), Random play, frame cards with SAFE ribbons, bubble backgrounds
 - **Fixed: Square Box** — YouTube IFrame container properly hidden when songs stop/end
+- **Fixed: Trending Tracks** — InnerTube clientVersion updated to 1.20250525.00.00, trending music restored
 - **Wider Grid Layouts** — Up to 8 columns on ultra-wide screens for trending & kids content
 
 ### Previous: v2.1.0
@@ -46,7 +51,8 @@
 - **Video Playback** — Watch music videos with adjustable quality (420p+)
 - **Ad-Free Listening** — No interruptions, pure music
 - **Dark Theme** — Easy on the eyes with dark/light mode toggle
-- **Voice Search** — Search songs using your voice
+- **Voice Search** — Search songs using your voice (works on ALL browsers)
+- **AI Voice Assistant** — Conversational AI assistant with continuous listening mode, exit keywords, and cloud STT fallback
 - **Trending Music** — Discover what's hot right now (actual music only)
 - **Responsive Design** — Works on mobile, tablet & desktop
 - **Car Mode** — Simplified UI for driving
@@ -71,6 +77,9 @@
 | **Piped API** | YouTube stream fallback (Layer 4) |
 | **Web Audio API** | Volume normalization & EQ |
 | **MediaSession API** | Lock screen controls |
+| **z-ai-web-dev-sdk** | AI voice assistant & cloud STT |
+| **Web Speech API** | Browser-native speech recognition |
+| **MediaRecorder API** | Cloud STT fallback for all browsers |
 
 ## Branching Strategy (Staging Convention)
 
@@ -145,7 +154,9 @@ src/
 │   ├── trending-section.tsx # Trending music grid (wide layout)
 │   ├── kids-mode.tsx        # Kids mode (6 categories, frame cards)
 │   ├── track-card.tsx       # 3D tilt track cards
-│   ├── voice-search.tsx     # Voice input
+│   ├── voice-search.tsx     # Voice search (3-tier mic fallback)
+│   ├── voice-assistant.tsx  # AI voice assistant (continuous mode)
+│   ├── music-icon-fallback.tsx # Neumorphic ♫ icon for broken thumbnails
 │   ├── library-view.tsx     # Library & playlists
 │   └── ...
 ├── lib/
@@ -155,6 +166,45 @@ src/
 │   ├── db.ts            # Prisma database client
 │   └── utils-music.ts   # Music utilities
 └── ...
+```
+
+## Voice & Mic Architecture
+
+```
+User clicks 🎤 Mic button
+       │
+       ▼
+┌──────────────────────────────────────────────────┐
+│  Tier 1: Web Speech API (Chrome / Edge)          │
+│  - Browser-native, zero server cost              │
+│  - Real-time interim results                     │
+│  - Auto-language via navigator.language          │
+└──────────────┬───────────────────────────────────┘
+               │ Not supported? (Firefox / Safari / mobile)
+               ▼
+┌──────────────────────────────────────────────────┐
+│  Tier 2: MediaRecorder + Cloud STT (ALL browsers)│
+│  - Captures audio as webm/opus                   │
+│  - Sends to /api/speech-to-text                  │
+│  - Fallback chain:                               │
+│    z-ai-web-dev-sdk (zero config)                │
+│    → Deepgram → AssemblyAI → Google Cloud        │
+└──────────────┬───────────────────────────────────┘
+               │ All tiers failed?
+               ▼
+┌──────────────────────────────────────────────────┐
+│  Tier 3: Pitch Detection (Web Audio API)         │
+│  - Autocorrelation via AnalyserNode              │
+│  - Shows audio feedback even without text        │
+└──────────────────────────────────────────────────┘
+
+KEY FIXES (commit 7635365):
+  ✅ Explicit getUserMedia permission before SpeechRecognition
+  ✅ All callback state reads use refs (no stale closures)
+  ✅ MediaRecorder cloud fallback for non-Chrome browsers
+  ✅ AudioContext.resume() for autoplay policy
+  ✅ Voice Assistant: interimTextRef + voiceStateRef
+  ✅ Cloud STT: z-ai-web-dev-sdk as zero-config Tier 0
 ```
 
 ## Audio Streaming Architecture
@@ -229,5 +279,5 @@ This project is licensed under the **BSD 3-Clause** License.
 </p>
 
 <p align="center">
-  Built with 🌿 by <a href="https://github.com/ak46-prog">ak46-prog</a> • v2.2.0 3D Aesthetic UI with Weed Grass Theme
+  Built with 🌿 by <a href="https://github.com/ak46-prog">ak46-prog</a> • v2.2.0 3D Aesthetic UI · Mic Fix · Weed Grass Theme
 </p>

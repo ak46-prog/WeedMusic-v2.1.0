@@ -3,17 +3,18 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Track {
   id          String   @id @default(cuid())
-  videoId     String   @unique  // YouTube video ID
+  videoId     String   @unique
   title       String
   artist      String   @default("Unknown")
   thumbnail   String   @default("")
-  duration    Int      @default(0)  // seconds
+  duration    Int      @default(0)
   isPaid      Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

@@ -1,0 +1,31 @@
+[project]
+id = "oahdestuhxzwhltyrsjo"
+name = "WeedMusic"
+
+[api]
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public"]
+
+[db]
+port = 54322
+
+[studio]
+port = 54323
+
+[auth]
+site_url = "https://weed-music-v2-1-0.vercel.app"
+additional_redirect_urls = ["https://weed-music-v2-1-0.vercel.app/api/auth/supabase/callback"]
+
+[auth.providers.google]
+enabled = true
+client_id = ""
+secret = ""
+
+[auth.providers.github]
+enabled = true
+client_id = ""
+secret = ""
+
+[storage]
+file_size_limit = "50MB"

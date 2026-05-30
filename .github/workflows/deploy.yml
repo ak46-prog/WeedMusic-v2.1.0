@@ -8,6 +8,9 @@ on:
 
 env:
   NODE_VERSION: '20'
+  SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+  SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+  SUPABASE_PROJECT_ID: oahdestuhxzwhltyrsjo
 
 jobs:
   # ─── Stage 1: Lint & Type Check ───
@@ -57,17 +60,47 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          DATABASE_URL: file:./tmp.db
+          DATABASE_URL: postgresql://postgres:placeholder@localhost:5432/postgres
+          NEXT_PUBLIC_SUPABASE_URL: https://oahdestuhxzwhltyrsjo.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9haGRlc3R1aHh6d2hsdHlyc2pvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMjczMTEsImV4cCI6MjA5NTYwMzMxMX0.U2PoQJGbzZXBu-NTR4BWCzi4b4Tvg2vWCS81Z0ML-m4
 
-  # ─── Stage 3: Deploy Staging ───
+  # ─── Stage 3: Supabase Migrations ───
+  supabase-migrate:
+    name: Supabase DB Migration
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link Supabase Project
+        run: supabase link --project-ref ${{ env.SUPABASE_PROJECT_ID }}
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        continue-on-error: true
+
+      - name: Push Database Schema
+        run: supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        continue-on-error: true
+
+  # ─── Stage 4: Deploy Staging ───
   deploy-staging:
     name: Deploy Staging
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, supabase-migrate]
     if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
     environment:
       name: staging
-      url: https://weedmusic-staging.vercel.app
+      url: https://weed-music-v2-1-0.vercel.app
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -87,15 +120,15 @@ jobs:
         run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
         continue-on-error: true
 
-  # ─── Stage 4: Deploy Production ───
+  # ─── Stage 5: Deploy Production ───
   deploy-production:
     name: Deploy Production
     runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    needs: [build, supabase-migrate]
+    if: github.ref == 'refs/heads/main'
     environment:
       name: production
-      url: https://weedmusic.vercel.app
+      url: https://weed-music-v2-1-0.vercel.app
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -113,4 +146,9 @@ jobs:
 
       - name: Deploy to Vercel (Production)
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        continue-on-error: true
+
+      - name: Initialize Supabase Database
+        run: |
+          curl -s "https://weed-music-v2-1-0.vercel.app/api/setup?key=${{ secrets.SETUP_KEY || 'weedmusic-setup-2025' }}" || true
         continue-on-error: true

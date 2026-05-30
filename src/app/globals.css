@@ -77,6 +77,9 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.65 0.2 55);
+  --banner-gradient-start: #a293ff;
+  --banner-gradient-end: #00f0ff;
+  --banner-overlay: rgba(162,147,255,0.12);
 }
 
 .dark {
@@ -111,6 +114,9 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.65 0.2 55);
+  --banner-gradient-start: #a293ff;
+  --banner-gradient-end: #00f0ff;
+  --banner-overlay: rgba(162,147,255,0.12);
 }
 
 @layer base {

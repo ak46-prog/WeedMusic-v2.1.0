@@ -1457,120 +1457,27 @@ html.theme-transitioning *::after {
 }
 
 /* ==========================================================================
-   3D DESIGN SYSTEM — Inspired by Deri-Kurniawan/3d-portfolio
-   Purple→Cyan gradient theme (#a293ff → #00f0ff), floating geometry,
-   GPU-only animations, scroll-triggered entrances, clean depth layering
+   3D DESIGN SYSTEM — Lightweight CSS + Framer Motion
+   Inspired by Deri-Kurniawan/3d-portfolio: NO WebGL, NO canvas,
+   pure CSS perspective + Framer Motion animations.
+   Purple→Cyan gradient theme (#a293ff → #00f0ff).
+   Zero GPU context overhead — was 9 WebGL canvases, now ZERO.
    ========================================================================== */
 
 /* ---- 3D Hero Container ---- */
 .hero-3d-container {
   position: relative;
+  overflow: hidden;
   background: linear-gradient(135deg, #0a0a1a 0%, #0f0f2e 50%, #0a0a1a 100%);
 }
 
-/* ---- 3D Hero Ambient Shroud (darker for 3D scene readability) ---- */
-.hero-ambient-shroud-3d {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    oklch(0.1 0.02 280 / 0.2) 0%,
-    oklch(0.1 0.02 280 / 0.6) 60%,
-    var(--background) 100%
-  );
-  pointer-events: none;
-  z-index: 1;
-}
-:root:not(.dark) .hero-ambient-shroud-3d {
-  background: linear-gradient(
-    to bottom,
-    oklch(0.3 0.03 280 / 0.1) 0%,
-    oklch(0.95 0.01 280 / 0.7) 60%,
-    var(--background) 100%
-  );
-}
-
-/* ---- 3D Gradient Text (purple→cyan) ---- */
+/* ---- 3D Gradient Text (purple→cyan) — from 3d-portfolio dk-gradient-text ---- */
 .gradient-text-3d {
   background: linear-gradient(135deg, #a293ff, #00f0ff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-
-/* ---- Hero 3D Content Layer (above canvas) ---- */
-.hero-3d-content {
-  position: relative;
-  z-index: 2;
-}
-
-/* ---- 3D Category Card ---- */
-.category-3d-card {
-  position: relative;
-  border-radius: 16px;
-  overflow: hidden;
-  background: var(--card);
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              border-color 0.25s ease;
-  will-change: transform;
-  animation: fade-in-stagger 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  opacity: 0;
-}
-
-.category-3d-card:hover {
-  transform: translateY(-6px) scale(1.02) translateZ(0);
-  box-shadow: 0 16px 40px -8px oklch(0 0 0 / 0.3),
-              0 0 20px var(--cat-color, #a293ff20);
-  border-color: var(--cat-color, #a293ff40);
-}
-
-.category-3d-card:active {
-  transform: translateY(-2px) scale(0.98) translateZ(0);
-  transition-duration: 0.1s;
-}
-
-/* 3D shape background in category card */
-.category-3d-shape {
-  width: 100%;
-  aspect-ratio: 1;
-  opacity: 0.7;
-  transition: opacity 0.3s ease;
-}
-.category-3d-card:hover .category-3d-shape {
-  opacity: 1;
-}
-
-/* Card content overlay */
-.category-3d-content {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 12px 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(to top, var(--card) 60%, transparent);
-  z-index: 1;
-}
-
-/* Glow effect on hover */
-.category-3d-glow {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-  z-index: 0;
-}
-.category-3d-card:hover .category-3d-glow {
-  opacity: 1;
-}
-
-/* ---- 3D Text Gradient for Section Headers ---- */
 .text-gradient-3d {
   background: linear-gradient(135deg, #a293ff, #00f0ff);
   -webkit-background-clip: text;
@@ -1578,7 +1485,33 @@ html.theme-transitioning *::after {
   background-clip: text;
 }
 
-/* ---- 3D Floating Badge (for premium/special tags) ---- */
+/* ---- Hero 3D Content Layer ---- */
+.hero-3d-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- 3D Section Divider ---- */
+.divider-3d {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #a293ff30, #00f0ff30, transparent);
+  margin: 0 auto;
+  max-width: 600px;
+}
+.section-divider-3d {
+  height: 1px;
+  background: linear-gradient(to right,
+    transparent,
+    rgba(162, 147, 255, 0.3),
+    rgba(0, 240, 255, 0.2),
+    rgba(162, 147, 255, 0.3),
+    transparent
+  );
+  margin: 0 auto;
+  max-width: 600px;
+}
+
+/* ---- 3D Floating Badge ---- */
 .badge-3d {
   display: inline-flex;
   align-items: center;
@@ -1592,25 +1525,9 @@ html.theme-transitioning *::after {
   background: linear-gradient(135deg, #a293ff20, #00f0ff20);
   color: #a293ff;
   border: 1px solid #a293ff30;
-  backdrop-filter: blur(4px);
 }
 
-/* ---- 3D Card Glass Effect (for track cards in 3D mode) ---- */
-.card-3d-glass {
-  background: linear-gradient(135deg, oklch(0.3 0.03 280 / 0.6), oklch(0.2 0.02 220 / 0.4));
-  border: 1px solid oklch(1 0 0 / 8%);
-  border-radius: 12px;
-  backdrop-filter: blur(8px);
-  will-change: transform;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.2s ease;
-}
-.card-3d-glass:hover {
-  transform: translateY(-4px) translateZ(0);
-  box-shadow: 0 12px 30px oklch(0 0 0 / 0.3), 0 0 15px #a293ff15;
-}
-
-/* ---- 3D Glow Dot (decorative accent) ---- */
+/* ---- 3D Glow Dot ---- */
 @keyframes glow3dPulse {
   0%, 100% { box-shadow: 0 0 6px 2px var(--glow-color, #a293ff40); opacity: 0.8; }
   50% { box-shadow: 0 0 14px 4px var(--glow-color, #a293ff60); opacity: 1; }
@@ -1623,56 +1540,7 @@ html.theme-transitioning *::after {
   animation: glow3dPulse 2s ease-in-out infinite;
 }
 
-/* ---- 3D Section Divider ---- */
-.divider-3d {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #a293ff30, #00f0ff30, transparent);
-  margin: 0 auto;
-  max-width: 600px;
-}
-
-/* ---- Kids Mode Override: disable 3D scenes ---- */
-.kids-mode .hero-3d-container canvas,
-.kids-mode .category-3d-shape canvas {
-  display: none;
-}
-.kids-mode .category-3d-card {
-  animation: none;
-  opacity: 1;
-}
-
-/* ---- Reduced Motion: disable 3D animations ---- */
-@media (prefers-reduced-motion: reduce) {
-  .category-3d-card {
-    animation: none;
-    opacity: 1;
-  }
-  .category-3d-card:hover {
-    transform: none;
-  }
-}
-
-/* ==========================================================================
-   3D IMMERSIVE DESIGN — Floating Cards, Category Orbs, Audio Visualizer
-   Inspired by Deri-Kurniawan/3d-portfolio Framer Motion + R3F integration
-   Purple→Cyan gradient theme with GPU-only animations
-   ========================================================================== */
-
-/* ---- 3D Gradient Text ---- */
-.text-gradient-3d {
-  background: linear-gradient(135deg, #a293ff, #00f0ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.gradient-text-3d {
-  background: linear-gradient(135deg, #a293ff, #00f0ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ---- Floating 3D Track Card ---- */
+/* ---- Floating 3D Track Card (Framer Motion perspective) ---- */
 .floating-3d-card {
   position: relative;
   background: var(--card);
@@ -1719,13 +1587,12 @@ html.theme-transitioning *::after {
   background: rgba(0, 0, 0, 0.35);
   opacity: 0;
   transition: opacity 0.2s ease;
-  backdrop-filter: blur(2px);
 }
 .floating-3d-card:hover .floating-3d-overlay {
   opacity: 1;
 }
 
-/* ---- Category 3D Card V2 ---- */
+/* ---- Category 3D Card V2 (CSS-only, no WebGL canvas) ---- */
 .category-3d-card-v2 {
   position: relative;
   display: flex;
@@ -1748,7 +1615,7 @@ html.theme-transitioning *::after {
               0 0 0 1px rgba(162, 147, 255, 0.08);
 }
 
-/* ---- Category 3D Shape Container ---- */
+/* ---- Category 3D Shape Container (CSS animated shapes, NO canvas) ---- */
 .category-3d-shape {
   position: absolute;
   inset: 0;
@@ -1781,58 +1648,23 @@ html.theme-transitioning *::after {
   border-radius: 20px;
 }
 
-/* ---- Hero 3D Container ---- */
-.hero-3d-container {
-  position: relative;
-  overflow: hidden;
+/* ---- Kids Mode: disable 3D animations ---- */
+.kids-mode .category-3d-shape {
+  display: none;
 }
 
-/* ---- Hero 3D Content ---- */
-.hero-3d-content {
-  position: relative;
-  z-index: 2;
-}
-
-/* ---- Hero Ambient Shroud 3D ---- */
-.hero-ambient-shroud-3d {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom,
-    oklch(0.145 0 0 / 0.05) 0%,
-    oklch(0.145 0 0 / 0.4) 50%,
-    var(--background) 100%
-  );
-  pointer-events: none;
-}
-:root:not(.dark) .hero-ambient-shroud-3d {
-  background: linear-gradient(to bottom,
-    oklch(1 0 0 / 0.05) 0%,
-    oklch(1 0 0 / 0.4) 50%,
-    var(--background) 100%
-  );
-}
-
-/* ---- Premium Hero Media V2 ---- */
-.premium-hero-media-v2 {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: contrast(1.02) brightness(0.9) saturate(1.1);
-  will-change: transform;
-  transform: translateZ(0);
-  animation: premiumCinematicDrift 40s cubic-bezier(0.25, 1, 0.5, 1) infinite alternate;
-}
-
-/* ---- 3D Section Divider ---- */
-.section-divider-3d {
-  height: 1px;
-  background: linear-gradient(to right,
-    transparent,
-    rgba(162, 147, 255, 0.3),
-    rgba(0, 240, 255, 0.2),
-    rgba(162, 147, 255, 0.3),
-    transparent
-  );
-  margin: 0 auto;
-  max-width: 600px;
+/* ---- Reduced Motion: disable 3D animations ---- */
+@media (prefers-reduced-motion: reduce) {
+  .category-3d-card-v2,
+  .floating-3d-card {
+    transition: none;
+  }
+  .category-3d-card-v2:hover,
+  .floating-3d-card:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .glow-dot-3d {
+    animation: none;
+  }
 }

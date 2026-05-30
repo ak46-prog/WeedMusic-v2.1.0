@@ -1,14 +1,11 @@
 'use client';
 
-import { useState, lazy, Suspense } from 'react';
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { useRef } from 'react';
 import { Music, Guitar, Mic2, Radio, Mic, Drum, Film, Globe } from 'lucide-react';
 import { useMusicStore } from '@/lib/store';
-
-// Lazy-load 3D scene for category cards
-const CategoryScene3D = lazy(() =>
-  import('@/components/3d/scene-3d').then((mod) => ({ default: mod.CategoryScene3D }))
-);
+import { CategoryScene3D } from '@/components/3d/scene-3d';
 
 const CATEGORIES = [
   { id: 'pop', label: 'Pop', icon: Music, color: '#a293ff', shape: 'torus' as const, query: 'pop hits 2025', desc: 'Top charts & viral hits' },
@@ -22,26 +19,21 @@ const CATEGORIES = [
 ];
 
 export function Category3DSection() {
-  const [show3D, setShow3D] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const setState = useMusicStore.setState;
-
-  // Activate 3D after mount — INP-safe macrotask
-  useState(() => {
-    setTimeout(() => setShow3D(true), 0);
-  });
+  const sectionRef = useRef(null);
+  const inView = useInView(sectionRef, { once: true, margin: '-50px' });
 
   const handleCategoryClick = (query: string) => {
     setState({ searchQuery: query, view: 'search' });
   };
 
   return (
-    <section className="px-4 md:px-6 py-8">
+    <section ref={sectionRef} className="px-4 md:px-6 py-8">
       {/* Section Header */}
       <motion.div
         initial={{ opacity: 0, x: -30 }}
-        whileInView={{ opacity: 1, x: 0 }}
-        viewport={{ once: true }}
+        animate={inView ? { opacity: 1, x: 0 } : {}}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
         className="flex items-center gap-3 mb-6"
       >
@@ -66,12 +58,11 @@ export function Category3DSection() {
           return (
             <motion.button
               key={cat.id}
-              onClick={() => handleCategoryClick(cat.query)}
+              onClick={() => setTimeout(() => handleCategoryClick(cat.query), 0)}
               onMouseEnter={() => setHoveredId(cat.id)}
               onMouseLeave={() => setHoveredId(null)}
               initial={{ opacity: 0, y: 40, scale: 0.9 }}
-              whileInView={{ opacity: 1, y: 0, scale: 1 }}
-              viewport={{ once: true, margin: '-30px' }}
+              animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
               transition={{
                 duration: 0.5,
                 delay: index * 0.07,
@@ -90,22 +81,9 @@ export function Category3DSection() {
               }}
               className="category-3d-card-v2 group"
             >
-              {/* 3D Shape Background */}
+              {/* 3D Shape Background — lightweight CSS, NO WebGL canvas */}
               <div className="category-3d-shape">
-                {show3D && (
-                  <Suspense fallback={
-                    <div className="w-full h-full flex items-center justify-center">
-                      <motion.div
-                        animate={{ scale: [0.8, 1.1, 0.8], opacity: [0.3, 0.6, 0.3] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="w-10 h-10 rounded-full"
-                        style={{ backgroundColor: `${cat.color}30` }}
-                      />
-                    </div>
-                  }>
-                    <CategoryScene3D color={cat.color} shape={cat.shape} />
-                  </Suspense>
-                )}
+                <CategoryScene3D color={cat.color} shape={cat.shape} />
               </div>
 
               {/* Card Content */}

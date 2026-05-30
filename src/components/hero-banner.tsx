@@ -1,25 +1,14 @@
 'use client';
 
-import { useState, lazy, Suspense } from 'react';
 import Image from 'next/image';
 import { Play, Shuffle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useMusicStore, type Track } from '@/lib/store';
-
-// Lazy-load 3D scene to avoid blocking INP
-const HeroScene3D = lazy(() =>
-  import('@/components/3d/scene-3d').then((mod) => ({ default: mod.HeroScene3D }))
-);
+import { HeroScene3D } from '@/components/3d/scene-3d';
 
 export function HeroBanner() {
   const { setView } = useMusicStore();
-  const [show3D, setShow3D] = useState(false);
-
-  // Activate 3D after mount via setTimeout(0) macrotask — INP-safe
-  useState(() => {
-    setTimeout(() => setShow3D(true), 0);
-  });
 
   const handlePlayNow = async () => {
     try {
@@ -48,24 +37,20 @@ export function HeroBanner() {
         src="/weedmusic-banner.png"
         alt="WeedMusic Banner"
         fill
-        className="premium-hero-media-v2"
+        className="premium-hero-media"
         priority
       />
 
-      {/* 3D Scene Overlay */}
-      {show3D && (
-        <Suspense fallback={null}>
-          <HeroScene3D />
-        </Suspense>
-      )}
+      {/* 3D Scene Overlay — lightweight Framer Motion + CSS (NO WebGL) */}
+      <HeroScene3D />
 
       {/* Ambient Shroud Gradient Overlay */}
-      <div className="hero-ambient-shroud-3d" />
+      <div className="hero-ambient-shroud" />
 
       {/* Side gradient for text readability */}
       <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/50 to-transparent pointer-events-none" />
 
-      {/* Content with Framer Motion entrance (inspired by 3D-portfolio hero) */}
+      {/* Content with Framer Motion entrance (inspired by 3d-portfolio hero) */}
       <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 pb-8" style={{ paddingInline: 'var(--fluid-padding)' }}>
         <div className="max-w-2xl hero-3d-content">
           <motion.h1
@@ -94,7 +79,7 @@ export function HeroBanner() {
             className="flex gap-3"
           >
             <Button
-              onClick={handlePlayNow}
+              onClick={() => setTimeout(() => handlePlayNow(), 0)}
               size="lg"
               className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white gap-2 h-12 px-6 rounded-2xl shadow-lg shadow-purple-500/25 transition-all hover:scale-105 active:scale-95"
             >

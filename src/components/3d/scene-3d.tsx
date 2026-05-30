@@ -1,296 +1,233 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Float, Stars, MeshDistortMaterial, Sparkles } from '@react-three/drei';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
-import * as THREE from 'three';
+/**
+ * Lightweight 3D Scene Components
+ * Replaces heavy @react-three/fiber WebGL canvases with
+ * Framer Motion + CSS perspective — inspired by 3d-portfolio.
+ *
+ * Performance wins:
+ * - ZERO WebGL contexts (was 9: 1 hero + 8 categories)
+ * - GPU-only CSS animations (transform, opacity)
+ * - Framer Motion for scroll-triggered entrances
+ * - ~200KB bundle reduction (no three/r3f/drei/postprocessing)
+ */
 
-/* ---- Floating Geometric Shape ---- */
+import { motion, useInView } from 'framer-motion';
+import React, { useRef } from 'react';
+
+/* ─── Shared motion config (3d-portfolio style) ─── */
+const EASE_OUT_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+/* ─── Floating Geometric Shape (CSS 3D — NO WebGL) ─── */
 function FloatingShape({
-  position,
-  geometry,
   color,
-  speed = 1,
-  scale = 1,
-  distort = 0,
+  size = 60,
+  className = '',
+  animate: customAnimate,
+  delay = 0,
+  style,
 }: {
-  position: [number, number, number];
-  geometry: 'torus' | 'icosahedron' | 'octahedron' | 'dodecahedron' | 'torusKnot';
   color: string;
-  speed?: number;
-  scale?: number;
-  distort?: number;
+  size?: number;
+  className?: string;
+  animate?: 'spin' | 'float' | 'pulse' | 'morph';
+  delay?: number;
+  style?: React.CSSProperties;
 }) {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const animConfig = {
+    spin: { animate: { rotate: 360 }, transition: { duration: 20, repeat: Infinity, ease: 'linear', delay } },
+    float: {
+      animate: { y: [0, -12, 0], rotate: [0, 5, -5, 0] },
+      transition: { duration: 6, repeat: Infinity, ease: 'easeInOut', delay },
+    },
+    pulse: {
+      animate: { scale: [1, 1.1, 1], opacity: [0.6, 1, 0.6] },
+      transition: { duration: 3, repeat: Infinity, ease: 'easeInOut', delay },
+    },
+    morph: {
+      animate: { borderRadius: ['30%', '50%', '30%', '50%'], scale: [1, 1.05, 1] },
+      transition: { duration: 8, repeat: Infinity, ease: 'easeInOut', delay },
+    },
+  };
 
-  useFrame((state) => {
-    if (!meshRef.current) return;
-    const t = state.clock.elapsedTime * speed * 0.3;
-    meshRef.current.rotation.x = t * 0.4;
-    meshRef.current.rotation.y = t * 0.6;
-    meshRef.current.position.y = position[1] + Math.sin(t * 0.5) * 0.3;
-  });
-
-  const geo = useMemo(() => {
-    switch (geometry) {
-      case 'torus':
-        return <torusGeometry args={[0.6, 0.2, 16, 32]} />;
-      case 'icosahedron':
-        return <icosahedronGeometry args={[0.5, 0]} />;
-      case 'octahedron':
-        return <octahedronGeometry args={[0.5, 0]} />;
-      case 'dodecahedron':
-        return <dodecahedronGeometry args={[0.4, 0]} />;
-      case 'torusKnot':
-        return <torusKnotGeometry args={[0.4, 0.15, 64, 16]} />;
-    }
-  }, [geometry]);
-
-  if (distort > 0) {
-    return (
-      <Float speed={speed} rotationIntensity={0.4} floatIntensity={0.6}>
-        <mesh ref={meshRef} position={position} scale={scale}>
-          {geo}
-          <MeshDistortMaterial
-            color={color}
-            roughness={0.15}
-            metalness={0.8}
-            transparent
-            opacity={0.65}
-            distort={distort}
-            speed={2}
-          />
-        </mesh>
-      </Float>
-    );
-  }
+  const anim = animConfig[customAnimate || 'float'];
 
   return (
-    <Float speed={speed} rotationIntensity={0.4} floatIntensity={0.6}>
-      <mesh ref={meshRef} position={position} scale={scale}>
-        {geo}
-        <meshStandardMaterial
-          color={color}
-          roughness={0.15}
-          metalness={0.8}
-          transparent
-          opacity={0.65}
-        />
-      </mesh>
-    </Float>
+    <motion.div
+      className={className}
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: color,
+        opacity: 0.5,
+        willChange: 'transform, opacity',
+        transform: 'translateZ(0)',
+        ...style,
+      }}
+      {...anim}
+    />
   );
 }
 
-/* ---- Particle Field ---- */
-function ParticleField({ count = 200 }: { count?: number }) {
-  const points = useRef<THREE.Points>(null);
-
-  const particlePositions = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 20;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 12;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
-    }
-    return positions;
-  }, [count]);
-
-  useFrame((state) => {
-    if (!points.current) return;
-    const t = state.clock.elapsedTime * 0.05;
-    points.current.rotation.y = t;
-    points.current.rotation.x = t * 0.3;
-  });
-
-  return (
-    <points ref={points}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={count}
-          array={particlePositions}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.03}
-        color="#a293ff"
-        transparent
-        opacity={0.6}
-        sizeAttenuation
-        depthWrite={false}
-      />
-    </points>
-  );
-}
-
-/* ---- Animated Wave Ring ---- */
-function WaveRing({ position, color = '#00f0ff' }: { position: [number, number, number]; color?: string }) {
-  const ringRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (!ringRef.current) return;
-    const t = state.clock.elapsedTime;
-    ringRef.current.scale.setScalar(1 + Math.sin(t * 0.8) * 0.15);
-    ringRef.current.rotation.x = t * 0.2;
-    ringRef.current.rotation.z = t * 0.1;
-  });
-
-  return (
-    <mesh ref={ringRef} position={position}>
-      <torusGeometry args={[1.2, 0.03, 16, 100]} />
-      <meshStandardMaterial
-        color={color}
-        emissive={color}
-        emissiveIntensity={0.4}
-        transparent
-        opacity={0.5}
-        roughness={0.1}
-        metalness={0.9}
-      />
-    </mesh>
-  );
-}
-
-/* ---- Audio Visualizer Ring (3D EQ bars around a circle) ---- */
-function AudioVisualizerRing({ position = [0, 0, 0] as [number, number, number], barCount = 32, radius = 1.5, color1 = '#a293ff', color2 = '#00f0ff' }: { position?: [number, number, number]; barCount?: number; radius?: number; color1?: string; color2?: string }) {
-  const groupRef = useRef<THREE.Group>(null);
-  const barsRef = useRef<THREE.InstancedMesh>(null);
-
-  const barGeo = useMemo(() => new THREE.BoxGeometry(0.06, 1, 0.06), []);
-  const dummy = useMemo(() => new THREE.Object3D(), []);
-
-  // Color array for instanced mesh
-  const colorArray = useMemo(() => {
-    const colors = new Float32Array(barCount * 3);
-    const c1 = new THREE.Color(color1);
-    const c2 = new THREE.Color(color2);
-    for (let i = 0; i < barCount; i++) {
-      const t = i / barCount;
-      const c = c1.clone().lerp(c2, t);
-      colors[i * 3] = c.r;
-      colors[i * 3 + 1] = c.g;
-      colors[i * 3 + 2] = c.b;
-    }
-    return colors;
-  }, [barCount, color1, color2]);
-
-  useFrame((state) => {
-    if (!barsRef.current) return;
-    const t = state.clock.elapsedTime;
-
-    for (let i = 0; i < barCount; i++) {
-      const angle = (i / barCount) * Math.PI * 2;
-      // Simulate audio-reactive heights with sine waves at different frequencies
-      const height = 0.3 + Math.abs(Math.sin(t * 2 + i * 0.5)) * 0.8 + Math.abs(Math.sin(t * 3.7 + i * 0.3)) * 0.4;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-
-      dummy.position.set(x, height * 0.5, z);
-      dummy.scale.set(1, height, 1);
-      dummy.rotation.set(0, -angle, 0);
-      dummy.updateMatrix();
-      barsRef.current.setMatrixAt(i, dummy.matrix);
-    }
-    barsRef.current.instanceMatrix.needsUpdate = true;
-
-    // Slow rotation of the whole group
-    if (groupRef.current) {
-      groupRef.current.rotation.y = t * 0.1;
-    }
-  });
-
-  return (
-    <group ref={groupRef} position={position}>
-      <instancedMesh ref={barsRef} args={[barGeo, undefined, barCount]}>
-        <meshStandardMaterial
-          emissive="#a293ff"
-          emissiveIntensity={0.3}
-          roughness={0.2}
-          metalness={0.8}
-          toneMapped={false}
-        />
-      </instancedMesh>
-      {/* Center glow orb */}
-      <mesh>
-        <sphereGeometry args={[0.15, 16, 16]} />
-        <meshStandardMaterial
-          color="#a293ff"
-          emissive="#a293ff"
-          emissiveIntensity={1.5}
-          toneMapped={false}
-        />
-      </mesh>
-    </group>
-  );
-}
-
-/* ---- Main 3D Scene for Hero Banner ---- */
+/* ─── Hero Scene 3D (Framer Motion + CSS perspective) ─── */
 export function HeroScene3D() {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-100px' });
+
+  const decoratives = [
+    { className: 'absolute top-[8%] -left-8 md:-left-16', color: '#a293ff', size: 90, animate: 'float' as const, delay: 0.3 },
+    { className: 'absolute top-[12%] -right-6 md:-right-14', color: '#00f0ff', size: 70, animate: 'spin' as const, delay: 0.5 },
+    { className: 'absolute bottom-[15%] -left-10 md:-left-20', color: '#c084fc', size: 80, animate: 'pulse' as const, delay: 0.7 },
+    { className: 'absolute bottom-[10%] -right-8 md:-right-16', color: '#22d3ee', size: 100, animate: 'morph' as const, delay: 0.2 },
+    { className: 'absolute top-[45%] left-[10%]', color: '#a78bfa', size: 45, animate: 'float' as const, delay: 0.9 },
+    { className: 'absolute top-[35%] right-[8%]', color: '#818cf8', size: 55, animate: 'pulse' as const, delay: 0.4 },
+  ];
+
   return (
-    <Canvas
-      camera={{ position: [0, 0, 6], fov: 50 }}
-      dpr={[1, 1.5]}
-      gl={{ antialias: true, alpha: true }}
-      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+    <div
+      ref={ref}
+      className="absolute inset-0 overflow-hidden pointer-events-none"
+      style={{ perspective: 800, transformStyle: 'preserve-3d' }}
     >
-      <ambientLight intensity={0.3} />
-      <directionalLight position={[5, 5, 5]} intensity={0.6} color="#ffffff" />
-      <pointLight position={[-3, 2, 4]} intensity={0.8} color="#a293ff" />
-      <pointLight position={[3, -1, 3]} intensity={0.5} color="#00f0ff" />
+      {/* Ambient particles — pure CSS circles */}
+      <div className="absolute inset-0">
+        {Array.from({ length: 25 }).map((_, i) => (
+          <motion.div
+            key={`p-${i}`}
+            className="absolute rounded-full"
+            style={{
+              width: 2 + (i % 4),
+              height: 2 + (i % 4),
+              backgroundColor: i % 2 === 0 ? '#a293ff' : '#00f0ff',
+              left: `${5 + (i * 37) % 90}%`,
+              top: `${5 + (i * 53) % 90}%`,
+              willChange: 'transform, opacity',
+              transform: 'translateZ(0)',
+            }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={inView ? {
+              opacity: [0, 0.4 + (i % 5) * 0.1, 0],
+              scale: [0.5, 1, 0.5],
+              y: [0, -20 - (i % 3) * 10, 0],
+            } : {}}
+            transition={{
+              duration: 4 + (i % 4),
+              repeat: Infinity,
+              delay: i * 0.15,
+              ease: 'easeInOut',
+            }}
+          />
+        ))}
+      </div>
 
-      <Stars
-        radius={50}
-        depth={50}
-        count={1500}
-        factor={3}
-        saturation={0.3}
-        fade
-        speed={0.5}
-      />
+      {/* Audio visualizer ring — CSS circles + scaleY bars */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <motion.div
+          className="relative"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={inView ? { opacity: 1, scale: 1 } : {}}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          style={{ transform: 'translateZ(0)' }}
+        >
+          {/* Ring outline */}
+          <motion.div
+            className="rounded-full border-2"
+            style={{
+              width: 200,
+              height: 200,
+              borderColor: '#a293ff40',
+              willChange: 'transform',
+              transform: 'translateZ(0)',
+            }}
+            animate={{
+              scale: [1, 1.05, 1],
+              rotate: [0, 180, 360],
+            }}
+            transition={{
+              scale: { duration: 3, repeat: Infinity, ease: 'easeInOut' },
+              rotate: { duration: 30, repeat: Infinity, ease: 'linear' },
+            }}
+          />
 
-      <Sparkles
-        count={80}
-        scale={8}
-        size={2}
-        speed={0.4}
-        color="#a293ff"
-      />
+          {/* Center glow orb */}
+          <motion.div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            style={{
+              width: 20,
+              height: 20,
+              background: 'radial-gradient(circle, #a293ff 0%, #00f0ff80 70%, transparent 100%)',
+              willChange: 'transform, opacity',
+              transform: 'translateZ(0)',
+            }}
+            animate={{
+              scale: [1, 1.3, 1],
+              opacity: [0.6, 1, 0.6],
+            }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          />
 
-      <ParticleField count={300} />
+          {/* EQ bars around the ring */}
+          {Array.from({ length: 16 }).map((_, i) => {
+            const angle = (i / 16) * 360;
+            const radius = 100;
+            const x = Math.cos((angle * Math.PI) / 180) * radius;
+            const y = Math.sin((angle * Math.PI) / 180) * radius;
+            return (
+              <motion.div
+                key={`bar-${i}`}
+                className="absolute rounded-full"
+                style={{
+                  width: 4,
+                  height: 16,
+                  backgroundColor: i % 2 === 0 ? '#a293ff' : '#00f0ff',
+                  left: '50%',
+                  top: '50%',
+                  transformOrigin: 'center bottom',
+                  willChange: 'transform',
+                  transform: `translate(${x - 2}px, ${y - 8}px) translateZ(0) rotate(${angle + 90}deg)`,
+                }}
+                animate={{
+                  scaleY: [0.3, 1, 0.5, 0.8, 0.3],
+                }}
+                transition={{
+                  duration: 1.2 + (i % 3) * 0.3,
+                  repeat: Infinity,
+                  delay: i * 0.08,
+                  ease: 'easeInOut',
+                }}
+              />
+            );
+          })}
+        </motion.div>
+      </div>
 
-      {/* Floating shapes — purple→cyan gradient theme */}
-      <FloatingShape position={[-3.5, 1.2, -1]} geometry="torus" color="#a293ff" speed={1.2} scale={0.9} distort={0.2} />
-      <FloatingShape position={[3.8, 0.5, -2]} geometry="icosahedron" color="#00f0ff" speed={0.8} scale={0.7} distort={0.3} />
-      <FloatingShape position={[-2, -1.5, 0]} geometry="octahedron" color="#c084fc" speed={1} scale={0.6} />
-      <FloatingShape position={[2.5, -1, -1.5]} geometry="torusKnot" color="#22d3ee" speed={0.6} scale={0.5} distort={0.15} />
-      <FloatingShape position={[0, 2, -3]} geometry="dodecahedron" color="#a78bfa" speed={0.9} scale={0.45} distort={0.25} />
-
-      {/* Audio Visualizer Ring — 3D EQ bars */}
-      <AudioVisualizerRing position={[0, 0, -1.5]} barCount={40} radius={2} />
-
-      {/* Wave rings */}
-      <WaveRing position={[0, 0, -2]} color="#a293ff" />
-      <WaveRing position={[0, 0, -2]} color="#00f0ff" />
-
-      {/* Fog for depth */}
-      <fog attach="fog" args={['#0a0a0f', 8, 25]} />
-
-      {/* Post-processing bloom for glow */}
-      <EffectComposer>
-        <Bloom
-          intensity={0.5}
-          luminanceThreshold={0.6}
-          luminanceSmoothing={0.9}
-          mipmapBlur
-        />
-      </EffectComposer>
-    </Canvas>
+      {/* Decorative floating shapes — inspired by 3d-portfolio hero */}
+      {decoratives.map((d, i) => (
+        <motion.div
+          key={`dec-${i}`}
+          className={d.className}
+          initial={{ opacity: 0, x: i % 2 === 0 ? -80 : 80 }}
+          animate={inView ? { opacity: 0.5, x: 0 } : {}}
+          transition={{ duration: 0.8, delay: 0.4 + i * 0.15, ease: EASE_OUT_EXPO }}
+        >
+          <FloatingShape
+            color={d.color}
+            size={d.size}
+            animate={d.animate}
+            delay={i * 0.2}
+            className="rounded-2xl backdrop-blur-sm"
+            style={{
+              background: `linear-gradient(135deg, ${d.color}30, ${d.color}10)`,
+              border: `1px solid ${d.color}20`,
+            }}
+          />
+        </motion.div>
+      ))}
+    </div>
   );
 }
 
-/* ---- Compact 3D Scene for Category Cards ---- */
+/* ─── Category Card 3D Shape (CSS-only, ZERO WebGL) ─── */
 export function CategoryScene3D({
   color = '#a293ff',
   shape = 'icosahedron',
@@ -298,67 +235,122 @@ export function CategoryScene3D({
   color?: string;
   shape?: 'torus' | 'icosahedron' | 'octahedron' | 'dodecahedron' | 'torusKnot';
 }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-30px' });
+
+  // Map shape names to CSS border-radius patterns for visual distinction
+  const shapeStyles: Record<string, React.CSSProperties> = {
+    torus: { borderRadius: '50%', border: `3px solid ${color}60` },
+    icosahedron: { borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%' },
+    octahedron: { borderRadius: '40% 60% 60% 40% / 60% 40% 60% 40%' },
+    dodecahedron: { borderRadius: '25% 75% 50% 50% / 50% 25% 75% 50%' },
+    torusKnot: { borderRadius: '60% 40% 60% 40% / 40% 60% 40% 60%' },
+  };
+
   return (
-    <Canvas
-      camera={{ position: [0, 0, 3], fov: 45 }}
-      dpr={[1, 1.5]}
-      gl={{ antialias: true, alpha: true }}
-      style={{ width: '100%', height: '100%' }}
+    <div
+      ref={ref}
+      className="w-full h-full flex items-center justify-center"
+      style={{ perspective: 500, transformStyle: 'preserve-3d' }}
     >
-      <ambientLight intensity={0.4} />
-      <pointLight position={[2, 2, 2]} intensity={0.8} color={color} />
-      <pointLight position={[-1, -1, 2]} intensity={0.3} color="#ffffff" />
+      {/* Main shape */}
+      <motion.div
+        style={{
+          width: 60,
+          height: 60,
+          background: `linear-gradient(135deg, ${color}50, ${color}20)`,
+          border: `1px solid ${color}30`,
+          willChange: 'transform, opacity',
+          transform: 'translateZ(0)',
+          ...shapeStyles[shape],
+        }}
+        initial={{ opacity: 0, scale: 0.5, rotateX: 20 }}
+        animate={inView ? {
+          opacity: 1,
+          scale: 1,
+          rotateX: 0,
+          rotateY: [0, 360],
+        } : {}}
+        transition={{
+          opacity: { duration: 0.5 },
+          scale: { duration: 0.5, ease: EASE_OUT_EXPO },
+          rotateX: { duration: 0.5 },
+          rotateY: { duration: 25, repeat: Infinity, ease: 'linear' },
+        }}
+      />
 
-      <Float speed={2} rotationIntensity={0.8} floatIntensity={0.5}>
-        <FloatingShape position={[0, 0, 0]} geometry={shape} color={color} speed={1.5} scale={1.3} distort={0.2} />
-      </Float>
-
-      <Sparkles count={20} scale={3} size={1.5} speed={0.3} color={color} />
-
-      <EffectComposer>
-        <Bloom
-          intensity={0.4}
-          luminanceThreshold={0.7}
-          luminanceSmoothing={0.9}
-          mipmapBlur
-        />
-      </EffectComposer>
-    </Canvas>
+      {/* Sparkle dots */}
+      {Array.from({ length: 6 }).map((_, i) => {
+        const angle = (i / 6) * 360;
+        const r = 30;
+        return (
+          <motion.div
+            key={`sp-${i}`}
+            className="absolute rounded-full"
+            style={{
+              width: 4,
+              height: 4,
+              backgroundColor: color,
+              left: `calc(50% + ${Math.cos((angle * Math.PI) / 180) * r}px)`,
+              top: `calc(50% + ${Math.sin((angle * Math.PI) / 180) * r}px)`,
+              willChange: 'transform, opacity',
+              transform: 'translateZ(0)',
+            }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={inView ? {
+              opacity: [0, 0.8, 0],
+              scale: [0.5, 1, 0.5],
+            } : {}}
+            transition={{
+              duration: 2.5,
+              repeat: Infinity,
+              delay: i * 0.3,
+              ease: 'easeInOut',
+            }}
+          />
+        );
+      })}
+    </div>
   );
 }
 
-/* ---- 3D Floating Thumbnail Scene (for track cards) ---- */
+/* ─── Thumbnail Scene 3D (CSS-only micro 3D effect) ─── */
 export function ThumbnailScene3D({
   color = '#a293ff',
 }: {
   color?: string;
 }) {
   return (
-    <Canvas
-      camera={{ position: [0, 0, 2.5], fov: 40 }}
-      dpr={[1, 1.5]}
-      gl={{ antialias: true, alpha: true }}
-      style={{ width: '100%', height: '100%' }}
+    <div
+      className="w-full h-full flex items-center justify-center"
+      style={{ perspective: 400, transformStyle: 'preserve-3d' }}
     >
-      <ambientLight intensity={0.5} />
-      <pointLight position={[1.5, 1.5, 2]} intensity={0.6} color={color} />
-
-      <Float speed={3} rotationIntensity={1.2} floatIntensity={0.8}>
-        <mesh>
-          <octahedronGeometry args={[0.4, 0]} />
-          <MeshDistortMaterial
-            color={color}
-            roughness={0.1}
-            metalness={0.9}
-            transparent
-            opacity={0.5}
-            distort={0.3}
-            speed={3}
-          />
-        </mesh>
-      </Float>
-
-      <Sparkles count={10} scale={2} size={1} speed={0.5} color={color} />
-    </Canvas>
+      <motion.div
+        style={{
+          width: 30,
+          height: 30,
+          borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%',
+          background: `linear-gradient(135deg, ${color}40, ${color}15)`,
+          border: `1px solid ${color}25`,
+          willChange: 'transform',
+          transform: 'translateZ(0)',
+        }}
+        animate={{
+          rotate: [0, 360],
+          scale: [1, 1.1, 1],
+          borderRadius: [
+            '30% 70% 70% 30% / 30% 30% 70% 70%',
+            '50% 50% 50% 50% / 50% 50% 50% 50%',
+            '70% 30% 30% 70% / 70% 70% 30% 30%',
+            '30% 70% 70% 30% / 30% 30% 70% 70%',
+          ],
+        }}
+        transition={{
+          rotate: { duration: 20, repeat: Infinity, ease: 'linear' },
+          scale: { duration: 4, repeat: Infinity, ease: 'easeInOut' },
+          borderRadius: { duration: 8, repeat: Infinity, ease: 'easeInOut' },
+        }}
+      />
+    </div>
   );
 }

@@ -6,6 +6,7 @@ import { Header } from '@/components/header';
 import { HeroBanner } from '@/components/hero-banner';
 import { TrendingSection } from '@/components/trending-section';
 import { CategorySection } from '@/components/category-section';
+import { Category3DSection } from '@/components/3d-categories';
 import { PromoBanner } from '@/components/promo-banner';
 import { SearchView } from '@/components/search-view';
 import { LibraryView } from '@/components/library-view';
@@ -93,6 +94,7 @@ export default function Home() {
               <HeroBanner />
               <PromoBanner />
               <TrendingSection />
+              <Category3DSection />
               <CategorySection />
               <TvChannels />
             </>

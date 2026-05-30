@@ -1,19 +1,28 @@
-# WeedMusic v2.1.0
+# WeedMusic v2.2.0
 
-**Ad-free music streaming app with YouTube integration** — JioSaavn-style UI built with Next.js 16, enhanced with Firebase Auth, Cloud Sync & Multi-Layer Audio Streaming
+**Ad-free music streaming app with YouTube integration** — Immersive 3D UI with Weed Grass decorations, Full-Screen layout, Enhanced Kids Mode & Multi-Layer Audio Streaming
 
 <p align="center">
   <a href="https://ak46-prog.github.io/WEEDMUSIC/">
     <img src="https://img.shields.io/badge/LAUNCH_PLAYER-Open_Now-orange?style=for-the-badge&logo=music" alt="Launch WeedMusic Player" />
   </a>
-  <img src="https://img.shields.io/badge/Version-2.1.0-blue?style=for-the-badge" alt="v2.1.0" />
+  <img src="https://img.shields.io/badge/Version-2.2.0-blue?style=for-the-badge" alt="v2.2.0" />
   <img src="https://img.shields.io/badge/Cost-$0-green?style=for-the-badge" alt="Free" />
-  <img src="https://img.shields.io/badge/Firebase-Enhanced-blueviolet?style=for-the-badge" alt="Firebase Enhanced" />
+  <img src="https://img.shields.io/badge/UI-3D_Aesthetic-9cf?style=for-the-badge" alt="3D UI" />
 </p>
 
 ---
 
-## What's New in v2.1.0
+## What's New in v2.2.0
+
+- **Full-Screen Layout** — Content covers the entire screen width with collapsible sidebar overlay
+- **3D Aesthetic Player** — Glass morphism, perspective album art, gradient buttons with depth shadows
+- **Weed Grass Decorations** — Animated grass blades, floating leaf particles, green gradient borders throughout
+- **Enhanced Kids Mode** — 6 rhyme categories (Nursery, Lullaby, Action, Animal, ABC, Fun), Random play, frame cards with SAFE ribbons, bubble backgrounds
+- **Fixed: Square Box** — YouTube IFrame container properly hidden when songs stop/end
+- **Wider Grid Layouts** — Up to 8 columns on ultra-wide screens for trending & kids content
+
+### Previous: v2.1.0
 
 - **Fixed: Music Loading** — Trending section now returns actual music tracks instead of news/livestreams
 - **Fixed: Song Playback** — Multi-layer audio streaming with 4 fallback layers for reliable playback
@@ -28,6 +37,10 @@
 
 - **YouTube Music Streaming** — Search & play millions of songs via YouTube
 - **4-Layer Audio Streaming** — ytdl-core → InnerTube → Invidious → Piped (automatic fallback)
+- **3D Aesthetic UI** — Glass morphism, perspective transforms, gradient depth shadows
+- **Weed Grass Theme** — Animated grass blades, floating leaves, green accents throughout
+- **Full-Screen Layout** — Content spans full viewport width with collapsible sidebar
+- **Enhanced Kids Mode** — 6 categories, random play, SAFE ribbon cards, bubble backgrounds
 - **Google Authentication** — Sign in with Google via Firebase (optional)
 - **Cloud Playlist Sync** — Cross-device sync via Firebase Realtime Database (optional)
 - **Video Playback** — Watch music videos with adjustable quality (420p+)
@@ -37,9 +50,6 @@
 - **Trending Music** — Discover what's hot right now (actual music only)
 - **Responsive Design** — Works on mobile, tablet & desktop
 - **Car Mode** — Simplified UI for driving
-- **Kids Mode** — Family-friendly interface
-- **EQ Controls** — Bass & treble adjustment
-- **Auto-Play Queue** — Seamless listening experience
 - **PWA Support** — Install as a native app
 - **Works Offline** — Full functionality without Firebase
 
@@ -77,8 +87,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/ak46-prog/WEEDM2.0.1.git
-cd WEEDM2.0.1
+git clone https://github.com/ak46-prog/WeedMusic-v2.2.0.git
+cd WeedMusic-v2.2.0
 
 # Install dependencies
 npm install
@@ -104,7 +114,7 @@ See [SETUP.md](./SETUP.md) for the complete 30-minute free deployment guide incl
 
 ### Quick Deploy to Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ak46-prog/WEEDM2.0.1)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ak46-prog/WeedMusic-v2.2.0)
 
 ## Project Structure
 
@@ -117,21 +127,24 @@ src/
 │   │   │   ├── stream/    # Audio/video streaming proxy
 │   │   │   ├── proxy/     # 4-layer stream resolver
 │   │   │   ├── trending/  # Trending music (music-only)
+│   │   │   ├── kids/      # Kids content (category-based)
 │   │   │   ├── playlists/ # Playlist management
 │   │   │   ├── favorites/ # Favorites management
 │   │   │   └── history/   # Play history
 │   │   └── route.ts   # Health check
 │   ├── layout.tsx     # Root layout with themes
-│   └── page.tsx       # Main app page
+│   └── page.tsx       # Main app page (full-screen)
 ├── components/
 │   ├── auth-button.tsx      # Firebase auth UI
 │   ├── audio-manager.tsx    # Core playback engine (4-layer fallback)
-│   ├── music-player.tsx     # Player UI bar
+│   ├── music-player.tsx     # 3D aesthetic player UI
 │   ├── video-player.tsx     # Video display
 │   ├── header.tsx           # App header & search
-│   ├── app-sidebar.tsx      # Navigation sidebar
-│   ├── hero-banner.tsx      # Home page banner
-│   ├── trending-section.tsx # Trending music grid
+│   ├── app-sidebar.tsx      # Collapsible navigation sidebar
+│   ├── hero-banner.tsx      # Hero with weed grass decorations
+│   ├── trending-section.tsx # Trending music grid (wide layout)
+│   ├── kids-mode.tsx        # Kids mode (6 categories, frame cards)
+│   ├── track-card.tsx       # 3D tilt track cards
 │   ├── voice-search.tsx     # Voice input
 │   ├── library-view.tsx     # Library & playlists
 │   └── ...
@@ -209,12 +222,12 @@ This project is licensed under the **BSD 3-Clause** License.
   <a href="https://ak46-prog.github.io/WEEDMUSIC/">
     <img src="https://img.shields.io/badge/Launch_Player-Listen_Now-green?style=for-the-badge" alt="Launch Player" />
   </a>
-  <a href="https://github.com/ak46-prog/WEEDM2.0.1">
-    <img src="https://img.shields.io/badge/Source_Code-WEEDM2.0.1-blue?style=for-the-badge" alt="Source Code" />
+  <a href="https://github.com/ak46-prog/WeedMusic-v2.2.0">
+    <img src="https://img.shields.io/badge/Source_Code-WeedMusic_v2.2.0-blue?style=for-the-badge" alt="Source Code" />
   </a>
   <img src="https://img.shields.io/badge/Security-256_bit_Encrypted-brightgreen?style=for-the-badge" alt="256-bit Encrypted" />
 </p>
 
 <p align="center">
-  Built with love by <a href="https://github.com/ak46-prog">ak46-prog</a> • v2.1.0 Enhanced with Firebase & Multi-Layer Streaming
+  Built with 🌿 by <a href="https://github.com/ak46-prog">ak46-prog</a> • v2.2.0 3D Aesthetic UI with Weed Grass Theme
 </p>

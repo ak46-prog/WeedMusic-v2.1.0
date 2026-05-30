@@ -59,11 +59,8 @@ interface MusicStore {
   sidebarOpen: boolean;
   currentArtist: ArtistData | null;
 
-  // Theme state
+  // Color state
   themePresetId: string | null;
-  autoThemeEnabled: boolean;
-  festivalCountry: string;
-  autoFestivalEnabled: boolean;
 
   // Actions
   setView: (view: ViewMode) => void;
@@ -92,9 +89,6 @@ interface MusicStore {
   toggleAutoPlay: () => void;
   setIsLoading: (loading: boolean) => void;
   setThemePresetId: (id: string | null) => void;
-  setAutoThemeEnabled: (enabled: boolean) => void;
-  setFestivalCountry: (country: string) => void;
-  setAutoFestivalEnabled: (enabled: boolean) => void;
 }
 
 export const useMusicStore = create<MusicStore>((set, get) => ({
@@ -121,9 +115,6 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
   sidebarOpen: false,
   currentArtist: null,
   themePresetId: null,
-  autoThemeEnabled: true,
-  festivalCountry: 'auto',
-  autoFestivalEnabled: true,
 
   setView: (view) => set({ view }),
   playTrack: (track) => set({
@@ -222,9 +213,6 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
   toggleAutoPlay: () => set((s) => ({ autoPlay: !s.autoPlay })),
   setIsLoading: (loading) => set({ isLoading: loading }),
   setThemePresetId: (id) => set({ themePresetId: id }),
-  setAutoThemeEnabled: (enabled) => set({ autoThemeEnabled: enabled }),
-  setFestivalCountry: (country) => set({ festivalCountry: country }),
-  setAutoFestivalEnabled: (enabled) => set({ autoFestivalEnabled: enabled }),
   openArtistView: (artistName: string) => {
     set({
       currentArtist: {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { Play, Heart, ListPlus, ListMusic, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -32,16 +32,16 @@ function getViews(track: Track): number {
 }
 
 // ---------------------------------------------------------------------------
-// Animated equalizer bars (used in list & artist-list variants)
+// Animated equalizer bars — GPU-only scaleY via .eq-bar class
 // ---------------------------------------------------------------------------
 
 function EqualizerBars() {
   return (
     <div className="flex gap-[3px] items-end h-4">
-      <span className="w-[3px] rounded-full bg-orange-500 animate-eq1 h-full" />
-      <span className="w-[3px] rounded-full bg-orange-500 animate-eq2 h-2" />
-      <span className="w-[3px] rounded-full bg-orange-500 animate-eq3 h-3" />
-      <span className="w-[3px] rounded-full bg-orange-500 animate-eq4 h-2.5" />
+      <span className="eq-bar w-[3px] rounded-full bg-orange-500 h-full" />
+      <span className="eq-bar w-[3px] rounded-full bg-orange-500 h-2" />
+      <span className="eq-bar w-[3px] rounded-full bg-orange-500 h-3" />
+      <span className="eq-bar w-[3px] rounded-full bg-orange-500 h-2.5" />
     </div>
   );
 }
@@ -63,37 +63,6 @@ function WaveformBars({ paused = false }: { paused?: boolean }) {
 }
 
 // ---------------------------------------------------------------------------
-// Ripple hook
-// ---------------------------------------------------------------------------
-
-function useRipple() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const createRipple = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const ripple = document.createElement('span');
-    ripple.className = 'ripple';
-    ripple.style.left = `${x - 10}px`;
-    ripple.style.top = `${y - 10}px`;
-
-    container.appendChild(ripple);
-
-    // Clean up after animation
-    ripple.addEventListener('animationend', () => {
-      ripple.remove();
-    });
-  }, []);
-
-  return { containerRef, createRipple };
-}
-
-// ---------------------------------------------------------------------------
 // Playlist data type
 // ---------------------------------------------------------------------------
 
@@ -103,7 +72,7 @@ interface Playlist {
 }
 
 // ---------------------------------------------------------------------------
-// TrackCard
+// TrackCard — Enterprise GPU-only, data-* attributes, macrotask offloading
 // ---------------------------------------------------------------------------
 
 interface TrackCardProps {
@@ -111,18 +80,15 @@ interface TrackCardProps {
   variant?: 'grid' | 'list' | 'artist-list';
   index?: number;
   onPlay?: () => void;
+  source?: string;
 }
 
-export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardProps) {
+export function TrackCard({ track, variant = 'grid', index, onPlay, source = 'unknown' }: TrackCardProps) {
   const { playTrack, addToQueue, currentTrack, isPlaying, currentTime, duration: storeDuration } = useMusicStore();
   const [isFav, setIsFav] = useState(false);
   const [isFavLoading, setIsFavLoading] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [playlistOpen, setPlaylistOpen] = useState(false);
-  const { containerRef, createRipple } = useRipple();
-
-  // 3D tilt state for grid variant
-  const [tiltStyle, setTiltStyle] = useState<React.CSSProperties>({});
 
   const isCurrentTrack = currentTrack?.videoId === track.videoId;
   const views = getViews(track);
@@ -135,15 +101,15 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
 
   // ---- Shared handlers ----
 
-  const handlePlay = () => {
-    if (onPlay) {
-      onPlay();
-    } else {
-      playTrack(track);
-    }
-  };
+  // Macrotask offloading — decouples play from click event for INP
+  const handlePlay = useCallback(() => {
+    setTimeout(() => {
+      if (onPlay) onPlay();
+      else playTrack(track);
+    }, 0);
+  }, [onPlay, playTrack, track]);
 
-  const handleFavorite = async () => {
+  const handleFavorite = useCallback(async () => {
     setIsFavLoading(true);
     try {
       if (isFav) {
@@ -162,13 +128,13 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
     } finally {
       setIsFavLoading(false);
     }
-  };
+  }, [isFav, track]);
 
-  const handleAddToQueue = () => {
+  const handleAddToQueue = useCallback(() => {
     addToQueue(track);
-  };
+  }, [addToQueue, track]);
 
-  const handleOpenPlaylists = async () => {
+  const handleOpenPlaylists = useCallback(async () => {
     try {
       const res = await fetch('/api/music/playlists');
       const data = await res.json();
@@ -176,9 +142,9 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
     } catch {
       setPlaylists([]);
     }
-  };
+  }, []);
 
-  const handleAddToPlaylist = async (playlistId: string) => {
+  const handleAddToPlaylist = useCallback(async (playlistId: string) => {
     try {
       await fetch(`/api/music/playlists/${playlistId}`, {
         method: 'POST',
@@ -189,42 +155,17 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
     } catch {
       // silently fail
     }
-  };
-
-  // ---- 3D Tilt handler for grid variant ----
-  const handle3DMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateX = ((y - centerY) / centerY) * -8; // Max 8 degrees
-    const rotateY = ((x - centerX) / centerX) * 8;
-    setTiltStyle({
-      transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`,
-    });
-  }, []);
-
-  const handle3DLeave = useCallback(() => {
-    setTiltStyle({
-      transform: 'rotateX(0deg) rotateY(0deg) scale(1)',
-    });
-  }, []);
+  }, [track]);
 
   // ---- Badge component (uses stream-badge CSS) ----
 
   const TierBadge = ({ className = '' }: { className?: string }) =>
     track.isPaid ? (
-      <span
-        className={`stream-badge stream-badge--premium ${className}`}
-      >
+      <span className={`stream-badge stream-badge--premium ${className}`}>
         PREMIUM
       </span>
     ) : (
-      <span
-        className={`stream-badge stream-badge--free ${className}`}
-      >
+      <span className={`stream-badge stream-badge--free ${className}`}>
         FREE
       </span>
     );
@@ -275,12 +216,11 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
   if (variant === 'artist-list') {
     return (
       <div
-        ref={containerRef}
-        onClick={(e) => {
-          createRipple(e);
-          handlePlay();
-        }}
-        className={`ripple-container group flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition-colors ${
+        onClick={handlePlay}
+        data-track-id={track.videoId}
+        data-index={index}
+        data-source={source}
+        className={`group flex items-center gap-3 px-4 py-2 rounded-lg cursor-pointer transition-colors ${
           isCurrentTrack
             ? 'bg-orange-50 dark:bg-orange-950/20'
             : 'hover:bg-accent/50'
@@ -306,7 +246,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
             src={track.thumbnail || '/weedmusic-logo.png'}
             alt={track.title}
             fill
-            className="object-cover"
+            className="object-cover card-thumb"
             unoptimized
           />
         </div>
@@ -351,12 +291,11 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
   if (variant === 'list') {
     return (
       <div
-        ref={containerRef}
-        onClick={(e) => {
-          createRipple(e);
-          handlePlay();
-        }}
-        className={`ripple-container track-row group flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all relative ${
+        onClick={handlePlay}
+        data-track-id={track.videoId}
+        data-index={index}
+        data-source={source}
+        className={`track-row group flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all relative ${
           isCurrentTrack
             ? 'bg-orange-50 dark:bg-orange-950/20 border-l-2 border-orange-500'
             : ''
@@ -368,7 +307,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
             src={track.thumbnail || '/weedmusic-logo.png'}
             alt={track.title}
             fill
-            className="object-cover"
+            className="object-cover card-thumb"
             unoptimized
           />
           <button
@@ -470,152 +409,135 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
   }
 
   // =======================================================================
-  // GRID VARIANT — 3D CSS DESIGN
+  // GRID VARIANT — Enterprise Premium Track Card (GPU-only hover)
   // =======================================================================
 
   return (
     <div
-      ref={containerRef}
-      onClick={(e) => {
-        createRipple(e);
-        handlePlay();
-      }}
-      onMouseMove={handle3DMove}
-      onMouseLeave={handle3DLeave}
-      className={`card-3d group relative rounded-xl overflow-visible cursor-pointer ${
-        isCurrentTrack ? 'ring-2 ring-orange-500 rounded-xl' : ''
+      onClick={handlePlay}
+      data-track-id={track.videoId}
+      data-index={index}
+      data-source={source}
+      className={`premium-track-card group relative cursor-pointer ${
+        isCurrentTrack ? 'is-playing' : ''
       }`}
     >
-      {/* 3D Depth Shadow */}
-      <div className="card-3d-shadow" />
+      {/* Thumbnail with card-media-wrapper */}
+      <div className="card-media-wrapper">
+        <Image
+          src={track.thumbnail || '/weedmusic-logo.png'}
+          alt={track.title}
+          fill
+          className="object-cover card-thumb transition-transform duration-500 group-hover:scale-110"
+          unoptimized
+        />
 
-      {/* Card Inner — receives 3D transforms */}
-      <div
-        className="card-3d-inner rounded-xl overflow-hidden bg-card text-card-foreground shadow-sm"
-        style={tiltStyle}
-      >
-        {/* Thumbnail with 3D depth */}
-        <div className="thumb-3d relative aspect-square w-full overflow-hidden">
-          <Image
-            src={track.thumbnail || '/weedmusic-logo.png'}
-            alt={track.title}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
-            unoptimized
-          />
+        {/* Play button overlay */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handlePlay();
+          }}
+          className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+        >
+          <div className="size-12 rounded-full bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+            <Play className="size-5 text-white fill-white ml-0.5" />
+          </div>
+        </button>
 
-          {/* 3D Shine/Reflection sweep on hover */}
-          <div className="thumb-3d-shine" />
+        {/* Duration badge */}
+        <div className="absolute bottom-2 right-2 bg-black/75 text-white text-[10px] font-medium px-1.5 py-0.5 rounded backdrop-blur-sm">
+          {formatDuration(track.duration)}
+        </div>
 
-          {/* Play button overlay with 3D depth */}
+        {/* FREE/PREMIUM badge */}
+        <div className="absolute top-2 left-2">
+          <TierBadge />
+        </div>
+
+        {/* View count badge */}
+        <div className="absolute bottom-2 left-2 bg-black/75 text-white text-[10px] font-medium px-1.5 py-0.5 rounded flex items-center gap-0.5 view-badge backdrop-blur-sm">
+          <Eye className="size-3" />
+          {viewsLabel}
+        </div>
+
+        {/* Action buttons */}
+        <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handlePlay();
+              handleFavorite();
             }}
-            className="play-btn-3d absolute inset-0 bg-black/30 flex items-center justify-center"
+            className="size-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors backdrop-blur-sm"
+            disabled={isFavLoading}
           >
-            <div className="size-12 rounded-full bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30 pulse-glow">
-              <Play className="size-5 text-white fill-white ml-0.5" />
-            </div>
+            <Heart
+              className={`size-3.5 ${
+                isFav ? 'fill-orange-500 text-orange-500' : 'text-white'
+              }`}
+            />
           </button>
-
-          {/* Duration badge with 3D float */}
-          <div className="badge-3d absolute bottom-2 right-2 bg-black/75 text-white text-[10px] font-medium px-1.5 py-0.5 rounded backdrop-blur-sm">
-            {formatDuration(track.duration)}
-          </div>
-
-          {/* FREE/PREMIUM badge with 3D float */}
-          <div className="badge-3d absolute top-2 left-2">
-            <TierBadge />
-          </div>
-
-          {/* View count badge with 3D float */}
-          <div className="badge-3d absolute bottom-2 left-2 bg-black/75 text-white text-[10px] font-medium px-1.5 py-0.5 rounded flex items-center gap-0.5 view-badge backdrop-blur-sm">
-            <Eye className="size-3" />
-            {viewsLabel}
-          </div>
-
-          {/* Action buttons */}
-          <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleFavorite();
-              }}
-              className="size-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors backdrop-blur-sm"
-              disabled={isFavLoading}
-            >
-              <Heart
-                className={`size-3.5 ${
-                  isFav ? 'fill-orange-500 text-orange-500' : 'text-white'
-                }`}
-              />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAddToQueue();
-              }}
-              className="size-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors backdrop-blur-sm"
-            >
-              <ListPlus className="size-3.5 text-white" />
-            </button>
-            <div onClick={(e) => e.stopPropagation()}>
-              <Popover open={playlistOpen} onOpenChange={setPlaylistOpen}>
-                <PopoverTrigger asChild>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenPlaylists();
-                    }}
-                    className="size-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors backdrop-blur-sm"
-                  >
-                    <ListMusic className="size-3.5 text-white" />
-                  </button>
-                </PopoverTrigger>
-                <PopoverContent className="w-48 p-2" align="end">
-                  <p className="text-xs font-medium px-2 py-1 mb-1">Add to playlist</p>
-                  {playlists.length === 0 ? (
-                    <p className="text-[11px] text-muted-foreground px-2 py-1">
-                      No playlists yet
-                    </p>
-                  ) : (
-                    <div className="max-h-32 overflow-y-auto">
-                      {playlists.map((pl) => (
-                        <button
-                          key={pl.id}
-                          onClick={() => handleAddToPlaylist(pl.id)}
-                          className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-accent transition-colors flex items-center gap-2"
-                        >
-                          <ListMusic className="size-3 text-orange-500" />
-                          {pl.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-        </div>
-
-        {/* Info */}
-        <div className="p-3">
-          <p
-            className={`text-sm font-medium truncate ${
-              isCurrentTrack ? 'text-orange-500' : ''
-            }`}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToQueue();
+            }}
+            className="size-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors backdrop-blur-sm"
           >
-            {track.title}
-          </p>
-          <p className="text-xs text-muted-foreground truncate mt-0.5 flex items-center gap-1">
-            {track.artist}
-            <span className="text-muted-foreground/40">•</span>
-            <Eye className="size-3 text-muted-foreground/60 shrink-0" />
-            <span className="view-badge">{viewsLabel} views</span>
-          </p>
+            <ListPlus className="size-3.5 text-white" />
+          </button>
+          <div onClick={(e) => e.stopPropagation()}>
+            <Popover open={playlistOpen} onOpenChange={setPlaylistOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenPlaylists();
+                  }}
+                  className="size-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors backdrop-blur-sm"
+                >
+                  <ListMusic className="size-3.5 text-white" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2" align="end">
+                <p className="text-xs font-medium px-2 py-1 mb-1">Add to playlist</p>
+                {playlists.length === 0 ? (
+                  <p className="text-[11px] text-muted-foreground px-2 py-1">
+                    No playlists yet
+                  </p>
+                ) : (
+                  <div className="max-h-32 overflow-y-auto">
+                    {playlists.map((pl) => (
+                      <button
+                        key={pl.id}
+                        onClick={() => handleAddToPlaylist(pl.id)}
+                        className="w-full text-left text-xs px-2 py-1.5 rounded hover:bg-accent transition-colors flex items-center gap-2"
+                      >
+                        <ListMusic className="size-3 text-orange-500" />
+                        {pl.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
+      </div>
+
+      {/* Info */}
+      <div className="p-0">
+        <p className={`text-sm font-medium truncate ${
+          isCurrentTrack ? 'text-orange-500' : ''
+        }`}>
+          {track.title}
+        </p>
+        <p className="text-xs text-muted-foreground truncate mt-0.5 flex items-center gap-1">
+          {track.artist}
+          <span className="text-muted-foreground/40">•</span>
+          <Eye className="size-3 text-muted-foreground/60 shrink-0" />
+          <span className="view-badge">{viewsLabel} views</span>
+        </p>
       </div>
     </div>
   );

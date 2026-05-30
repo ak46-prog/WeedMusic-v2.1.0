@@ -66,3 +66,124 @@ Stage Summary:
 - Staging naming convention: main (prod), staging (pre-prod), develop (dev), release/**, hotfix/**, feature/**
 - CI/CD pipeline with separate staging/production deployments
 - User needs to run publish.sh or publish-manual.sh to push to their GitHub account
+
+---
+Task ID: 3-6
+Agent: Super Z (Main)
+Task: MAJOR ENTERPRISE REFACTOR — Apply enterprise architecture patterns to WeedMusic frontend CSS and components
+
+Work Log:
+- Read all 7 key files: globals.css, hero-banner.tsx, track-card.tsx, audio-manager.tsx, music-player.tsx, kids-mode.tsx, layout.tsx
+- **globals.css**: Complete rewrite of custom CSS after `@layer base` block
+  - KEPT: All Tailwind/shadcn CSS variables (:root, .dark, oklch), @theme inline, @layer base
+  - ADDED: Enterprise Fluid 4K Scaling Tokens (--fluid-padding, --fluid-grid-gap, --font-size-base, --font-size-heading)
+  - ADDED: System Font Stack body rule (Zero FOUT)
+  - REPLACED: Scrollbar with ultra-thin 4px variant using oklch colors
+  - ADDED: GPU-Only Premium Track Card (.premium-track-card with translateY(-4px) hover)
+  - ADDED: Enterprise Track Grid (.enterprise-track-matrix with auto-fill fluid columns)
+  - ADDED: Hero Cinematic Drift Animation (premiumCinematicDrift, GPU-only scale+translate3d, 40s)
+  - ADDED: CSS-Only Skeleton Shimmer Loader (.skeleton-shimmer)
+  - REPLACED: Equalizer Bars with GPU-only scaleY (eq1-eq4, .eq-bar class)
+  - ADDED: Enterprise Playback Bar (.enterprise-playback-bar, backdrop-filter:blur(12px))
+  - ADDED: Range Input Styling, Scrollbar Hide, Card Hover (GPU-only translateY)
+  - ADDED: Track Row Hover, Category Chip (with will-change:transform), Stream Badge (removed badge-glow animation)
+  - ADDED: View Badge, Gradient Text, Focus Visible, Selection
+  - ADDED: Slide-in View Transitions, Fade-in Stagger (6-item limit per enterprise spec)
+  - ADDED: Glass Utilities (reduced blur 16→12px), Voice Search Pulse
+  - ADDED: Hero Ambient Shroud, Card Media Wrapper, Card Meta Text, Track Number
+  - ADDED: Toast Animations, Marquee (GPU translateX), Scroll Snap, Search Suggestion
+  - ADDED: Skeleton Card/Track, Text Gradient Premium, Now Playing Indicator
+  - REMOVED: All grass blade animations (grass-sway, grass-sway-alt, .grass-blade, .grass-patch)
+  - REMOVED: Weed leaf/particle decorations (.weed-leaf, .weed-particle, .weed-bg-pattern, .weed-corner-*)
+  - REMOVED: 3D card system (.card-3d, .card-3d-inner, .card-3d-shadow, .thumb-3d, .thumb-3d-shine, .play-btn-3d, .badge-3d)
+  - REMOVED: Ripple effect (.ripple-container, .ripple)
+  - REMOVED: 3D player (.player-3d, .player-thumb-3d, .play-btn-3d-player, .ctrl-btn-3d, .seek-bar-3d)
+  - REMOVED: Kids decorations (.kids-frame-card, .kids-ribbon, .kids-bubble)
+  - REMOVED: Heavy animations (gradient-border-rotate, glow-border, vinyl-spin, badge-glow)
+  - REMOVED: Heavy glass (glass-toolbar blur(24px), glass-modal blur(40px))
+  - KEPT backward-compat: card-lift, animate-icon-*, animate-shimmer, pulse-glow
+  - Updated @theme inline: --font-sans uses system font stack, --font-mono uses system monospace
+
+- **hero-banner.tsx**: Complete refactor
+  - REMOVED: All grass blade configs, weed particles, floating emojis, weed-bg-pattern overlay
+  - ADDED: premium-hero-media class with premiumCinematicDrift animation on banner image
+  - ADDED: hero-ambient-shroud gradient overlay
+  - ADDED: image-rendering: crisp-edges and filter: contrast(1.04) brightness(0.95) saturate(1.03) via CSS
+  - CHANGED: Height uses clamp(350px, 40vh, 700px) for 4K fluid scaling
+  - REMOVED: weed-leaf emoji from heading
+  - KEPT: Welcome to WeedMusic heading with gradient text, Play Now/Explore buttons
+
+- **track-card.tsx**: Enterprise refactor
+  - REMOVED: 3D tilt effect (handle3DMove/handle3DLeave, tiltStyle state)
+  - REMOVED: Ripple effect (useRipple hook, createRipple, containerRef)
+  - REMOVED: card-3d, card-3d-inner, card-3d-shadow, thumb-3d, thumb-3d-shine, play-btn-3d, badge-3d classes
+  - ADDED: data-track-id, data-index, data-source attributes on each card for O(1) lookups
+  - ADDED: premium-track-card class for grid variant with GPU-only translateY(-4px) hover
+  - ADDED: card-media-wrapper and card-thumb classes with content-visibility:auto
+  - ADDED: setTimeout(0) macrotask offloading in handlePlay
+  - REPLACED: EqualizerBars with .eq-bar class (GPU-only scaleY)
+  - REPLACED: WaveformBars using .waveform-bar with enterprise eq1-eq4 animations
+  - ADDED: source prop for data-source attribute
+
+- **audio-manager.tsx**: Memory sanitation refactor
+  - REPLACED: audio.innerHTML = '' + createElement('source') pattern with audio.removeAttribute('src') + audio.load() in 5 locations
+  - Location 1 (line ~306): tryDirectAudio - main audio source setting
+  - Location 2 (line ~332): Invidious fallback source setting
+  - Location 3 (line ~354): Error handler fallback to YouTube
+  - Location 4 (line ~500): Track change useEffect (replaced innerHTML='' + currentTime=0)
+  - Location 5 (line ~606): handleError in audio event listeners
+  - Each location now forces GC of previous media buffer via removeAttribute+load
+
+- **music-player.tsx**: Enterprise playback bar refactor
+  - REMOVED: All 20 grass-blade divs at top of player
+  - REPLACED: player-3d class with enterprise-playback-bar
+  - REMOVED: weed-leaf emoji decorations from empty state and track info
+  - REPLACED: player-thumb-3d with player-thumb (simplified, GPU-ready)
+  - REPLACED: All ctrl-btn-3d with ctrl-btn
+  - REPLACED: play-btn-3d-player with play-btn-player
+  - KEPT: All seek bar, controls, volume, queue, video, car mode functionality
+
+- **kids-mode.tsx**: GPU-only refactor
+  - REMOVED: All GRASS_COLORS, BUBBLES arrays
+  - REMOVED: Background bubbles (kids-bubble class)
+  - REMOVED: Grass patches at bottom and top
+  - REMOVED: grass-border-top from header
+  - REMOVED: weed-corner decorations
+  - REMOVED: kids-frame-card class (replaced with premium-track-card)
+  - REMOVED: kids-ribbon (replaced with inline SAFE badge)
+  - ADDED: premium-track-card class for kids track cards
+  - ADDED: enterprise-track-matrix for kids grid layout
+  - ADDED: skeleton-shimmer for loading states
+  - ADDED: setTimeout(0) macrotask offloading for play handlers
+  - ADDED: data-track-id, data-index, data-source attributes
+  - ADDED: .eq-bar class for GPU-only equalizer animations
+  - KEPT: PIN gate functionality (3444), category tabs, shuffle, play all
+
+- **layout.tsx**: System font stack refactor
+  - REMOVED: Geist and Geist_Mono next/font/google imports
+  - REMOVED: geistSans and geistMono variable definitions
+  - REMOVED: font variable classes from body className
+  - ADDED: System font stack via CSS custom property in globals.css
+
+- **Additional cleanup** (backward compatibility fixes):
+  - page.tsx: Removed weed-bg-pattern, grass-blade decorations, grass-border-top, weed-leaf classes
+  - header.tsx: Removed weed-leaf and grass-border-bottom classes
+  - trending-section.tsx: Removed weed-leaf class
+  - app-sidebar.tsx: Removed grass-border-top class
+
+- **Build verification**: npm run build successful ✓
+- **Lint verification**: No errors on modified files ✓
+- **Dev server**: Running on port 3000, serving pages with HTTP 200 ✓
+
+Stage Summary:
+- All 7 key files successfully refactored with enterprise architecture patterns
+- All animations are GPU-only (transform, opacity) — no layout-triggering properties
+- All backdrop-filter blur values ≤12px (was 20-40px)
+- No infinite animations except cinematic drift (40s), equalizer bars, voice pulse, and nav icons
+- Memory sanitation applied to audio manager (removeAttribute+load pattern)
+- Macrotask offloading (setTimeout(0)) applied to play handlers in track-card and kids-mode
+- Data-* attributes for O(1) lookups and event delegation pattern
+- Zero FOUT with system font stack
+- 4K fluid scaling with clamp() tokens
+- All existing functionality preserved (4-layer audio, YouTube IFrame, car mode, kids mode, etc.)
+- Backward compatibility maintained for referenced classes in other components

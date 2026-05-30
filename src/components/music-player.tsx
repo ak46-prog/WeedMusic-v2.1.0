@@ -269,11 +269,9 @@ export function MusicPlayer() {
 
   if (!currentTrack) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-40 player-3d player-fullscreen">
+      <div className="fixed bottom-0 left-0 right-0 z-40 enterprise-playback-bar player-fullscreen">
         <div className="flex items-center justify-center h-20 text-muted-foreground text-sm gap-2">
-          <span className="weed-leaf">🌿</span>
           <p>Select a song to start playing</p>
-          <span className="weed-leaf">🌿</span>
         </div>
       </div>
     );
@@ -281,29 +279,8 @@ export function MusicPlayer() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-40 player-3d player-fullscreen">
-        {/* Weed grass decoration strip at very top of player */}
-        <div className="relative h-2 pointer-events-none overflow-hidden">
-          {Array.from({ length: 20 }).map((_, i) => (
-            <div
-              key={i}
-              className="grass-blade"
-              style={{
-                left: `${(i / 20) * 100 + Math.random() * 4}%`,
-                height: `${6 + Math.random() * 8}px`,
-                background: `oklch(${0.45 + Math.random() * 0.15} ${0.15 + Math.random() * 0.05} 140)`,
-                animationDelay: `${Math.random() * -4}s`,
-                width: `${3 + Math.random() * 3}px`,
-                bottom: 0,
-                position: 'absolute',
-                borderRadius: '2px 2px 0 0',
-                transformOrigin: 'bottom center',
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Progress/Seek Bar — 3D enhanced */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 enterprise-playback-bar player-fullscreen">
+        {/* Progress/Seek Bar */}
         <div
           ref={progressRef}
           className="relative h-1.5 hover:h-3 cursor-pointer group transition-all duration-150 w-full"
@@ -330,7 +307,7 @@ export function MusicPlayer() {
             }}
           />
 
-          {/* Seek thumb — 3D styled */}
+          {/* Seek thumb */}
           <div
             className="absolute top-1/2 -translate-y-1/2 size-4 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none ring-2 ring-white dark:ring-gray-900"
             style={{
@@ -359,10 +336,10 @@ export function MusicPlayer() {
         </div>
 
         <div className="flex items-center gap-2 px-3 py-2 md:px-6 md:gap-4 h-[76px]">
-          {/* Track Info — 3D Album Art */}
+          {/* Track Info */}
           <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-80">
-            {/* 3D Thumbnail */}
-            <div className="player-thumb-3d size-14 shrink-0">
+            {/* Thumbnail */}
+            <div className="player-thumb size-14 shrink-0">
               <Image
                 src={currentTrack.thumbnail || '/weedmusic-logo.png'}
                 alt={currentTrack.title}
@@ -390,17 +367,16 @@ export function MusicPlayer() {
                 {currentTrack.artist}
               </button>
             </div>
-            {/* Weed leaf decoration next to title */}
-            <span className="weed-leaf hidden md:inline text-green-500/30 text-sm">🌿</span>
+
           </div>
 
-          {/* Controls — 3D styled */}
+          {/* Controls */}
           <div className="flex items-center justify-center gap-1 md:gap-2 flex-1">
             <Button
               onClick={toggleShuffle}
               variant="ghost"
               size="icon"
-              className={`hidden md:flex size-9 ctrl-btn-3d ${shuffle ? 'active' : 'text-muted-foreground'}`}
+              className={`hidden md:flex size-9 ctrl-btn ${shuffle ? 'active' : 'text-muted-foreground'}`}
             >
               <Shuffle className="size-4" />
             </Button>
@@ -409,7 +385,7 @@ export function MusicPlayer() {
               onClick={prevTrack}
               variant="ghost"
               size="icon"
-              className="size-10 ctrl-btn-3d text-foreground"
+              className="size-10 ctrl-btn text-foreground"
             >
               <SkipBack className="size-5" />
             </Button>
@@ -425,7 +401,7 @@ export function MusicPlayer() {
             ) : (
               <Button
                 onClick={togglePlay}
-                className="play-btn-3d-player size-12 text-white flex items-center justify-center"
+                className="play-btn-player size-12 text-white flex items-center justify-center"
               >
                 {isPlaying && !showLoading ? (
                   <Pause className="size-5" />
@@ -441,7 +417,7 @@ export function MusicPlayer() {
               onClick={nextTrack}
               variant="ghost"
               size="icon"
-              className="size-10 ctrl-btn-3d text-foreground"
+              className="size-10 ctrl-btn text-foreground"
             >
               <SkipForward className="size-5" />
             </Button>
@@ -450,7 +426,7 @@ export function MusicPlayer() {
               onClick={toggleRepeat}
               variant="ghost"
               size="icon"
-              className={`hidden md:flex size-9 ctrl-btn-3d ${repeat !== 'none' ? 'active' : 'text-muted-foreground'}`}
+              className={`hidden md:flex size-9 ctrl-btn ${repeat !== 'none' ? 'active' : 'text-muted-foreground'}`}
             >
               {repeat === 'one' ? <Repeat1 className="size-4" /> : <Repeat className="size-4" />}
             </Button>
@@ -478,7 +454,7 @@ export function MusicPlayer() {
                 onClick={() => setVolume(volume === 0 ? 0.8 : 0)}
                 variant="ghost"
                 size="icon"
-                className="size-7 ctrl-btn-3d"
+                className="size-7 ctrl-btn"
               >
                 {volume === 0 ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
               </Button>
@@ -496,7 +472,7 @@ export function MusicPlayer() {
               onClick={handleFavorite}
               variant="ghost"
               size="icon"
-              className={`size-9 ctrl-btn-3d ${isFav ? 'active' : 'text-muted-foreground'}`}
+              className={`size-9 ctrl-btn ${isFav ? 'active' : 'text-muted-foreground'}`}
             >
               <Heart className={`size-4 ${isFav ? 'fill-orange-500' : ''}`} />
             </Button>
@@ -505,7 +481,7 @@ export function MusicPlayer() {
               onClick={handleVideoPlay}
               variant="ghost"
               size="icon"
-              className="size-9 ctrl-btn-3d text-muted-foreground"
+              className="size-9 ctrl-btn text-muted-foreground"
             >
               <Video className="size-4" />
             </Button>
@@ -514,7 +490,7 @@ export function MusicPlayer() {
               onClick={() => useMusicStore.getState().setView('car')}
               variant="ghost"
               size="icon"
-              className="size-9 ctrl-btn-3d text-muted-foreground"
+              className="size-9 ctrl-btn text-muted-foreground"
             >
               <Car className="size-4" />
             </Button>
@@ -523,7 +499,7 @@ export function MusicPlayer() {
               onClick={() => setShowQueue(true)}
               variant="ghost"
               size="icon"
-              className="size-9 ctrl-btn-3d text-muted-foreground"
+              className="size-9 ctrl-btn text-muted-foreground"
             >
               <ListMusic className="size-4" />
             </Button>
@@ -535,7 +511,7 @@ export function MusicPlayer() {
               onClick={handleFavorite}
               variant="ghost"
               size="icon"
-              className={`size-9 ctrl-btn-3d ${isFav ? 'active' : 'text-muted-foreground'}`}
+              className={`size-9 ctrl-btn ${isFav ? 'active' : 'text-muted-foreground'}`}
             >
               <Heart className={`size-4 ${isFav ? 'fill-orange-500' : ''}`} />
             </Button>
@@ -543,7 +519,7 @@ export function MusicPlayer() {
               onClick={handleVideoPlay}
               variant="ghost"
               size="icon"
-              className="size-9 ctrl-btn-3d text-muted-foreground"
+              className="size-9 ctrl-btn text-muted-foreground"
             >
               <Video className="size-4" />
             </Button>
@@ -551,7 +527,7 @@ export function MusicPlayer() {
               onClick={() => setShowQueue(true)}
               variant="ghost"
               size="icon"
-              className="size-9 ctrl-btn-3d text-muted-foreground"
+              className="size-9 ctrl-btn text-muted-foreground"
             >
               <ListMusic className="size-4" />
             </Button>

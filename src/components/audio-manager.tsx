@@ -303,13 +303,10 @@ export function AudioManager() {
         clearYtInterval();
       }
 
-      audio.innerHTML = '';
-      const source = document.createElement('source');
-      source.src = data.directUrl;
-      source.type = data.mimeType || 'audio/mp4';
-      audio.appendChild(source);
+      audio.removeAttribute('src');
+      audio.load(); // Memory sanitation
+      audio.src = data.directUrl;
       audio.volume = useMusicStore.getState().volume;
-      audio.load();
 
       try {
         await audio.play();
@@ -329,12 +326,9 @@ export function AudioManager() {
             const fallbacks = fallbackData.invidiousFallbacks || [];
             for (const fb of fallbacks) {
               try {
-                audio.innerHTML = '';
-                const fbSource = document.createElement('source');
-                fbSource.src = fb.url;
-                fbSource.type = fb.mimeType || 'audio/mp4';
-                audio.appendChild(fbSource);
-                audio.load();
+                audio.removeAttribute('src');
+                audio.load(); // Memory sanitation
+                audio.src = fb.url;
                 await audio.play();
                 isLoadingRef.current = false;
                 useMusicStore.getState().setIsLoading(false);
@@ -350,7 +344,8 @@ export function AudioManager() {
         }
         // All fallbacks failed — switch back to YouTube
         playbackModeRef.current = 'youtube';
-        audio.innerHTML = '';
+        audio.removeAttribute('src');
+        audio.load(); // Memory sanitation
         if (ytPlayerRef.current) {
           try { ytPlayerRef.current.playVideo(); } catch { /* */ }
         }
@@ -501,8 +496,8 @@ export function AudioManager() {
     const audio = audioRef.current;
     if (audio) {
       audio.pause();
-      audio.innerHTML = '';
-      audio.currentTime = 0;
+      audio.removeAttribute('src');
+      audio.load(); // Force garbage collection of media buffer
     }
     clearYtInterval();
 
@@ -603,7 +598,8 @@ export function AudioManager() {
     const handleError = () => {
       if (playbackModeRef.current !== 'audio') return;
       playbackModeRef.current = 'youtube';
-      audio.innerHTML = '';
+      audio.removeAttribute('src');
+      audio.load(); // Memory sanitation
       const track = useMusicStore.getState().currentTrack;
       if (track) {
         const changeId = trackChangeIdRef.current;

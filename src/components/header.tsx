@@ -124,7 +124,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 grass-border-bottom">
+    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 h-14 sm:h-16">
 
         {/* Left: Menu + Logo */}
@@ -154,7 +154,7 @@ export function Header() {
               />
             </div>
             <span className="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-green-500 via-emerald-500 to-orange-500 bg-clip-text text-transparent hidden sm:inline select-none flex items-center gap-1">
-              weedmusic <span className="weed-leaf text-sm">🌿</span>
+              weedmusic <span className="text-sm">🌿</span>
             </span>
           </button>
 

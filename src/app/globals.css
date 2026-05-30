@@ -6,8 +6,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -123,33 +123,123 @@
   }
 }
 
-/* ============================================================
-   WEEDMUSIC STREAMING APP — CUSTOM STYLES
-   ============================================================ */
+/* ==========================================================================
+   WEEDMUSIC ENTERPRISE DESIGN SYSTEM
+   ========================================================================== */
 
-/* ---- Scrollbar ---- */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: oklch(0.7 0.15 55 / 0.5);
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.65 0.2 55 / 0.8);
+/* ---- Enterprise Fluid 4K Scaling Tokens ---- */
+:root {
+  --fluid-padding: clamp(1rem, 2.5vw, 3.5rem);
+  --fluid-grid-gap: clamp(1rem, 1.5vw, 2.5rem);
+  --font-size-base: clamp(0.875rem, 0.4vw + 0.75rem, 1.25rem);
+  --font-size-heading: clamp(1.5rem, 2vw + 1rem, 3.5rem);
 }
 
-/* Firefox */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: oklch(0.7 0.15 55 / 0.5) transparent;
+/* ---- System Font Stack (Zero FOUT) ---- */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ---- Range input styling ---- */
+/* ---- Ultra-thin Scrollbar ---- */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: oklch(0.65 0.2 55 / 0.3); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: oklch(0.65 0.2 55 / 0.6); }
+* { scrollbar-width: thin; scrollbar-color: oklch(0.65 0.2 55 / 0.3) transparent; }
+
+/* ---- Hidden Audio Element ---- */
+audio { display: none; }
+
+/* ---- GPU-Only Premium Track Card ---- */
+.premium-track-card {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+}
+.premium-track-card:hover {
+  transform: translateY(-4px);
+  background-color: var(--accent);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
+}
+.premium-track-card.is-playing {
+  border-color: oklch(0.65 0.2 55);
+  box-shadow: 0 0 0 1px oklch(0.65 0.2 55);
+}
+
+/* ---- Enterprise Track Grid (4K Fluid) ---- */
+.enterprise-track-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(180px, 14vw, 320px), 1fr));
+  gap: var(--fluid-grid-gap);
+}
+
+/* ---- Hero Cinematic Drift Animation (GPU-only: scale + translate3d) ---- */
+@keyframes premiumCinematicDrift {
+  0% { transform: scale(1.0) translate3d(0, 0, 0); }
+  100% { transform: scale(1.04) translate3d(0, -8px, 0); }
+}
+.premium-hero-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  filter: contrast(1.04) brightness(0.95) saturate(1.03);
+  will-change: transform;
+  transform: translateZ(0);
+  animation: premiumCinematicDrift 40s cubic-bezier(0.25, 1, 0.5, 1) infinite alternate;
+}
+
+/* ---- CSS-Only Skeleton Shimmer Loader ---- */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg, var(--muted) 25%, var(--accent) 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* ---- Equalizer Bars (GPU-only scaleY) ---- */
+@keyframes eq1 { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+@keyframes eq2 { 0%, 100% { transform: scaleY(0.5); } 50% { transform: scaleY(1); } }
+@keyframes eq3 { 0%, 100% { transform: scaleY(0.4); } 50% { transform: scaleY(1); } }
+@keyframes eq4 { 0%, 100% { transform: scaleY(0.6); } 50% { transform: scaleY(1); } }
+.eq-bar { transform-origin: bottom; }
+.eq-bar:nth-child(1) { animation: eq1 0.8s ease-in-out infinite; }
+.eq-bar:nth-child(2) { animation: eq2 0.6s ease-in-out infinite 0.1s; }
+.eq-bar:nth-child(3) { animation: eq3 0.7s ease-in-out infinite 0.2s; }
+.eq-bar:nth-child(4) { animation: eq4 0.9s ease-in-out infinite 0.15s; }
+.eq-bar.paused { animation-play-state: paused; }
+
+/* ---- Enterprise Playback Bar ---- */
+.enterprise-playback-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: oklch(0.145 0 0 / 0.8);
+  border-top: 1px solid oklch(1 0 0 / 10%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 100;
+}
+:root:not(.dark) .enterprise-playback-bar {
+  background-color: oklch(1 0 0 / 0.85);
+  border-top: 1px solid oklch(0.922 0 0);
+}
+
+/* ---- Range Input Styling ---- */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -159,9 +249,7 @@ input[type="range"] {
   outline: none;
   transition: height 0.15s ease;
 }
-input[type="range"]:hover {
-  height: 6px;
-}
+input[type="range"]:hover { height: 6px; }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 14px;
@@ -173,91 +261,307 @@ input[type="range"]::-webkit-slider-thumb {
   box-shadow: 0 1px 4px rgba(0,0,0,0.2);
   transition: transform 0.15s ease;
 }
-input[type="range"]::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+/* ---- Scrollbar Hide Utility ---- */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* ---- Card Hover (GPU-only translateY) ---- */
+.card-hover {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -10px oklch(0 0 0 / 0.3), 0 4px 12px -4px oklch(0.65 0.2 55 / 0.1);
+}
+.card-hover:active { transform: translateY(-1px); transition-duration: 0.1s; }
+
+/* ---- Track Row Hover ---- */
+.track-row { transition: background-color 0.15s ease; }
+.track-row:hover { background: oklch(0.97 0.05 55 / 0.5); }
+.dark .track-row:hover { background: oklch(0.269 0.05 55 / 0.5); }
+
+/* ---- Category Chip ---- */
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  background: oklch(0.97 0.05 55 / 0.4);
+  color: oklch(0.3 0.05 55);
+  border: 1px solid oklch(0.9 0.05 55);
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  will-change: transform;
+}
+.category-chip:hover {
+  background: oklch(0.65 0.2 55 / 0.12);
+  border-color: oklch(0.65 0.2 55 / 0.3);
+  color: oklch(0.65 0.2 55);
+  transform: translateY(-1px);
+}
+.category-chip.active {
+  background: oklch(0.65 0.2 55);
+  color: oklch(1 0 0);
+  border-color: oklch(0.65 0.2 55);
+  box-shadow: 0 2px 8px oklch(0.65 0.2 55 / 0.3);
 }
 
-/* ---- Audio element hidden ---- */
-audio {
-  display: none;
+/* ---- Stream Badge ---- */
+.stream-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+.stream-badge--free { background: oklch(0.92 0 0); color: oklch(0.4 0 0); }
+.dark .stream-badge--free { background: oklch(0.3 0 0); color: oklch(0.8 0 0); }
+.stream-badge--premium {
+  background: oklch(0.65 0.2 55 / 0.15);
+  color: oklch(0.65 0.2 55);
+  border: 1px solid oklch(0.65 0.2 55 / 0.3);
 }
 
-/* ---- Smooth transitions ---- */
-* {
-  scroll-behavior: smooth;
+/* ---- View Badge ---- */
+.view-badge { font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+
+/* ---- Gradient Text ---- */
+.gradient-text {
+  background: linear-gradient(135deg, #22c55e, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* ---- Marquee animation for promo banner ---- */
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+/* ---- Focus Visible ---- */
+:focus-visible { outline: 2px solid oklch(0.65 0.2 55); outline-offset: 2px; }
+
+/* ---- Selection ---- */
+::selection { background: oklch(0.65 0.2 55 / 0.3); color: inherit; }
+::-moz-selection { background: oklch(0.65 0.2 55 / 0.3); color: inherit; }
+
+/* ---- Slide-in View Transitions (GPU-only) ---- */
+@keyframes slide-in-right { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes slide-in-left { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes slide-in-up { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.animate-slide-right { animation: slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-slide-left { animation: slide-in-left 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-slide-up { animation: slide-in-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* ---- Fade-in Stagger ---- */
+@keyframes fade-in-stagger { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.stagger-list > * { opacity: 0; animation: fade-in-stagger 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.stagger-list > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-list > *:nth-child(2) { animation-delay: 40ms; }
+.stagger-list > *:nth-child(3) { animation-delay: 80ms; }
+.stagger-list > *:nth-child(4) { animation-delay: 120ms; }
+.stagger-list > *:nth-child(5) { animation-delay: 160ms; }
+.stagger-list > *:nth-child(n+6) { animation-delay: 200ms; }
+
+/* ---- Glass Utilities (Reduced blur from 20px→12px for performance) ---- */
+.glass-card {
+  background: oklch(1 0 0 / 8%);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid oklch(1 0 0 / 12%);
+  border-radius: var(--radius-lg, 0.75rem);
 }
-.animate-marquee {
-  animation: marquee 20s linear infinite;
+.dark .glass-card { background: oklch(1 0 0 / 6%); border-color: oklch(1 0 0 / 8%); }
+
+/* ---- Voice Search Pulse ---- */
+@keyframes voice-pulse {
+  0% { box-shadow: 0 0 0 0 oklch(0.65 0.2 55 / 0.5); }
+  70% { box-shadow: 0 0 0 14px oklch(0.65 0.2 55 / 0); }
+  100% { box-shadow: 0 0 0 0 oklch(0.65 0.2 55 / 0); }
 }
-.animate-marquee:hover {
-  animation-play-state: paused;
+.voice-pulse { animation: voice-pulse 1.5s ease-in-out infinite; }
+
+/* ---- Hero Ambient Shroud ---- */
+.hero-ambient-shroud {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, oklch(0.145 0 0 / 0.1) 0%, oklch(0.145 0 0 / 0.5) 60%, var(--background) 100%);
+  pointer-events: none;
+}
+:root:not(.dark) .hero-ambient-shroud {
+  background: linear-gradient(to bottom, oklch(1 0 0 / 0.1) 0%, oklch(1 0 0 / 0.5) 60%, var(--background) 100%);
 }
 
-/* ---- Hide scrollbar for horizontal scroll areas ---- */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+/* ---- Card Media Wrapper ---- */
+.card-media-wrapper {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.875rem;
+  background-color: var(--muted);
 }
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* ---- Equalizer bar animations ---- */
-@keyframes eq1 {
-  0%, 100% { height: 3px; }
-  50% { height: 12px; }
-}
-@keyframes eq2 {
-  0%, 100% { height: 6px; }
-  50% { height: 14px; }
-}
-@keyframes eq3 {
-  0%, 100% { height: 4px; }
-  50% { height: 10px; }
-}
-@keyframes eq4 {
-  0%, 100% { height: 8px; }
-  50% { height: 16px; }
+.card-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  content-visibility: auto;
 }
 
+/* ---- Card Meta Text ---- */
+.card-meta-title {
+  font-weight: 600;
+  font-size: calc(var(--font-size-base, 1rem) * 1.05);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-meta-sub {
+  color: var(--muted-foreground);
+  font-size: calc(var(--font-size-base, 1rem) * 0.875);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Track Number ---- */
+.track-number {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85em;
+  min-width: 2ch;
+  text-align: right;
+  color: var(--muted-foreground);
+  transition: color 0.15s ease;
+}
+.track-row:hover .track-number { color: oklch(0.65 0.2 55); }
+
+/* ---- Toast Animations ---- */
+@keyframes toast-slide-in { from { transform: translateX(100%) scale(0.95); opacity: 0; } to { transform: translateX(0) scale(1); opacity: 1; } }
+@keyframes toast-slide-out { from { transform: translateX(0) scale(1); opacity: 1; } to { transform: translateX(100%) scale(0.95); opacity: 0; } }
+.toast-enter { animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.toast-exit { animation: toast-slide-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* ---- Marquee (GPU-only translateX) ---- */
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.animate-marquee { animation: marquee 20s linear infinite; }
+.animate-marquee:hover { animation-play-state: paused; }
+
+/* ---- Scroll Snap ---- */
+.scroll-snap-x { overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+.scroll-snap-x > * { scroll-snap-align: start; flex-shrink: 0; }
+
+/* ---- Search Suggestion ---- */
+.search-suggestion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md, 0.5rem);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.search-suggestion:hover { background: oklch(0.97 0.05 55 / 0.5); }
+.dark .search-suggestion:hover { background: oklch(0.269 0.05 55 / 0.5); }
+
+/* ---- Skeleton Card ---- */
+.skeleton-track { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+.skeleton-track .skeleton-thumb {
+  width: 48px; height: 48px; border-radius: 6px;
+}
+.skeleton-track .skeleton-line { height: 12px; border-radius: 6px; }
+.skeleton-track .skeleton-line--title { width: 60%; }
+.skeleton-track .skeleton-line--artist { width: 40%; margin-top: 6px; height: 10px; }
+.skeleton-card .skeleton-cover { width: 100%; aspect-ratio: 1; border-radius: var(--radius-md, 0.5rem); }
+
+/* ---- Text Gradient Utilities ---- */
+.text-gradient-premium {
+  background: linear-gradient(135deg, oklch(0.65 0.2 55), oklch(0.75 0.18 70));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+
+/* ---- Now Playing Indicator (GPU scaleY) ---- */
+.now-playing-indicator { display: inline-flex; align-items: flex-end; gap: 2px; height: 14px; }
+.now-playing-indicator span { display: block; width: 3px; border-radius: 1px; background: oklch(0.65 0.2 55); transform-origin: bottom; }
+.now-playing-indicator span:nth-child(1) { height: 60%; animation: eq1 0.8s ease-in-out infinite; }
+.now-playing-indicator span:nth-child(2) { height: 100%; animation: eq2 0.6s ease-in-out infinite 0.1s; }
+.now-playing-indicator span:nth-child(3) { height: 40%; animation: eq3 0.7s ease-in-out infinite 0.2s; }
+.now-playing-indicator.paused span { animation-play-state: paused; }
+
+/* ---- Playing Pulse (for now-playing border glow) ---- */
+@keyframes playing-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.animate-playing-pulse { animation: playing-pulse 2s ease-in-out infinite; }
+
+/* ---- Nav Icon Animations (kept for navigation) ---- */
+@keyframes nav-bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+.animate-nav-bounce { animation: nav-bounce 0.3s ease-out; }
+
+/* ---- Progress Glow ---- */
+.progress-glow { box-shadow: 0 0 8px oklch(0.65 0.2 55 / 0.5); }
+
+/* ---- Waveform Bar (alternative equalizer with GPU scaleY) ---- */
+.waveform-bar {
+  display: inline-block;
+  width: 3px;
+  height: 16px;
+  border-radius: 2px;
+  background: oklch(0.65 0.2 55);
+  transform-origin: bottom;
+}
+.waveform-bar:nth-child(1) { animation: eq1 1.2s ease-in-out infinite; }
+.waveform-bar:nth-child(2) { animation: eq2 1.1s ease-in-out infinite 0.1s; }
+.waveform-bar:nth-child(3) { animation: eq3 1.3s ease-in-out infinite 0.05s; }
+.waveform-bar:nth-child(4) { animation: eq4 1.15s ease-in-out infinite 0.15s; }
+.waveform-bar.paused { animation-play-state: paused; }
+
+/* ---- Legacy Equalizer Classes (backward compat with GPU scaleY) ---- */
 .animate-eq1 { animation: eq1 0.8s ease-in-out infinite; }
 .animate-eq2 { animation: eq2 0.6s ease-in-out infinite 0.1s; }
 .animate-eq3 { animation: eq3 0.7s ease-in-out infinite 0.2s; }
 .animate-eq4 { animation: eq4 0.9s ease-in-out infinite 0.15s; }
 
-/* ---- Audio player pulse animation ---- */
-@keyframes audio-pulse {
-  0%, 100% { height: 4px; }
-  50% { height: 12px; }
+/* ---- Control Button Styling ---- */
+.ctrl-btn {
+  position: relative;
+  border-radius: 50%;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ctrl-btn:hover {
+  background: oklch(0.65 0.2 55 / 0.1);
+  transform: translateY(-1px);
+}
+.ctrl-btn:active {
+  transform: translateY(0) scale(0.92);
+}
+.ctrl-btn.active {
+  color: oklch(0.65 0.2 55);
 }
 
-/* ---- Glowing border animation for premium card ---- */
-@keyframes glow-border {
-  0%, 100% { border-color: oklch(0.65 0.2 55); box-shadow: 0 0 15px oklch(0.65 0.2 55 / 0.3); }
-  50% { border-color: oklch(0.7 0.2 140); box-shadow: 0 0 25px oklch(0.7 0.2 140 / 0.4); }
-}
-.animate-glow-border {
-  animation: glow-border 3s ease-in-out infinite;
-}
-
-/* ---- Streaming app: Track row hover effect ---- */
-.track-row {
-  transition: all 0.2s ease;
-}
-.track-row:hover {
-  background: oklch(0.97 0.05 55 / 0.5);
-}
-.dark .track-row:hover {
-  background: oklch(0.269 0.05 55 / 0.5);
+/* ---- Player Thumbnail (simplified, GPU-ready) ---- */
+.player-thumb {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px oklch(0 0 0 / 0.15), 0 2px 4px oklch(0 0 0 / 0.1);
+  will-change: transform;
 }
 
-/* ---- Streaming app: Card hover lift ---- */
+/* ---- Full-Screen Layout ---- */
+.full-width-content {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* ---- Backward-Compatible Utilities (referenced by other components) ---- */
+
+/* Card lift hover */
 .card-lift {
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
@@ -266,76 +570,7 @@ audio {
   box-shadow: 0 8px 25px -5px oklch(0.65 0.2 55 / 0.15);
 }
 
-/* ---- Streaming app: Shimmer loading effect ---- */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    oklch(0.97 0 0) 25%,
-    oklch(0.94 0 0) 50%,
-    oklch(0.97 0 0) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-.dark .animate-shimmer {
-  background: linear-gradient(
-    90deg,
-    oklch(0.269 0 0) 25%,
-    oklch(0.3 0 0) 50%,
-    oklch(0.269 0 0) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-
-/* ---- Streaming app: Playing indicator pulse ---- */
-@keyframes playing-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-.animate-playing-pulse {
-  animation: playing-pulse 2s ease-in-out infinite;
-}
-
-/* ---- Streaming app: View count badge ---- */
-.view-badge {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.01em;
-}
-
-/* ---- Streaming app: Gradient text ---- */
-.gradient-text {
-  background: linear-gradient(135deg, #22c55e, #f97316);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ---- Streaming app: Navigation icon bounce ---- */
-@keyframes nav-bounce {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-}
-.animate-nav-bounce {
-  animation: nav-bounce 0.3s ease-out;
-}
-
-/* ---- Streaming app: Bottom player glass effect ---- */
-.player-glass {
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-}
-
-/* ---- Streaming app: Song progress glow ---- */
-.progress-glow {
-  box-shadow: 0 0 8px oklch(0.65 0.2 55 / 0.5);
-}
-
-/* ---- GIF-style animated icon bases ---- */
+/* Nav icon animations */
 @keyframes icon-home {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-2px); }
@@ -357,11 +592,6 @@ audio {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
 }
-@keyframes icon-news {
-  0%, 100% { transform: skewX(0deg); }
-  25% { transform: skewX(-2deg); }
-  75% { transform: skewX(2deg); }
-}
 @keyframes icon-kids {
   0%, 100% { transform: scale(1) rotate(0deg); }
   25% { transform: scale(1.05) rotate(-3deg); }
@@ -377,1257 +607,23 @@ audio {
 .animate-icon-library { animation: icon-library 2s ease-in-out infinite; }
 .animate-icon-crown { animation: icon-crown 2s ease-in-out infinite; }
 .animate-icon-radio { animation: icon-radio 1.5s ease-in-out infinite; }
-.animate-icon-news { animation: icon-news 2s ease-in-out infinite; }
 .animate-icon-kids { animation: icon-kids 2s ease-in-out infinite; }
 .animate-icon-car { animation: icon-car 1.5s ease-in-out infinite; }
 
-/* ---- Focus visible ring ---- */
-:focus-visible {
-  outline: 2px solid oklch(0.65 0.2 55);
-  outline-offset: 2px;
+/* Shimmer (legacy class name compat) */
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--muted) 25%, var(--accent) 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
 }
 
-/* ---- Selection color ---- */
-::selection {
-  background: oklch(0.65 0.2 55 / 0.3);
-  color: inherit;
-}
-
-/* ============================================================
-   WEEDMUSIC — ENHANCED STREAMING STYLES
-   ============================================================ */
-
-/* ---- 1. Vinyl Spin Animation ---- */
-@keyframes vinyl-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-.vinyl-spin {
-  animation: vinyl-spin 3s linear infinite;
-  border-radius: 50%;
-}
-.vinyl-spin.paused {
-  animation-play-state: paused;
-}
-/* Decorative vinyl grooves overlay */
-.vinyl-grooves::after {
-  content: "";
-  position: absolute;
-  inset: 15%;
-  border-radius: 50%;
-  border: 2px dashed oklch(0.65 0.2 55 / 0.25);
-  pointer-events: none;
-}
-
-/* ---- 2. Gradient Border Animation (rotating conic border) ---- */
-@keyframes gradient-border-rotate {
-  0% { --gradient-angle: 0deg; }
-  100% { --gradient-angle: 360deg; }
-}
-@property --gradient-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-.gradient-border {
-  position: relative;
-  border-radius: var(--radius-lg, 0.75rem);
-  overflow: hidden;
-}
-.gradient-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 2px;
-  background: conic-gradient(
-    from var(--gradient-angle),
-    oklch(0.65 0.2 55),
-    oklch(0.8 0.15 80),
-    oklch(0.7 0.2 30),
-    oklch(0.65 0.2 55)
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: gradient-border-rotate 3s linear infinite;
-  pointer-events: none;
-}
-
-/* ---- 3. Ripple Effect ---- */
-@keyframes ripple-expand {
-  0% {
-    transform: scale(0);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-.ripple-container {
-  position: relative;
-  overflow: hidden;
-}
-.ripple-container .ripple {
-  position: absolute;
-  border-radius: 50%;
-  background: oklch(0.65 0.2 55 / 0.3);
-  width: 20px;
-  height: 20px;
-  transform: scale(0);
-  animation: ripple-expand 0.6s ease-out forwards;
-  pointer-events: none;
-}
-/* Dark mode ripple */
-.dark .ripple-container .ripple {
-  background: oklch(0.65 0.2 55 / 0.2);
-}
-
-/* ---- 4. Slide-in Animations (view transitions) ---- */
-@keyframes slide-in-right {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-@keyframes slide-in-left {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-@keyframes slide-in-up {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-@keyframes slide-in-down {
-  from {
-    transform: translateY(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-.animate-slide-right {
-  animation: slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.animate-slide-left {
-  animation: slide-in-left 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.animate-slide-up {
-  animation: slide-in-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.animate-slide-down {
-  animation: slide-in-down 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* ---- 5. Fade-in Stagger Animation ---- */
-@keyframes fade-in-stagger {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.stagger-list > * {
-  opacity: 0;
-  animation: fade-in-stagger 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.stagger-list > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-list > *:nth-child(2) { animation-delay: 40ms; }
-.stagger-list > *:nth-child(3) { animation-delay: 80ms; }
-.stagger-list > *:nth-child(4) { animation-delay: 120ms; }
-.stagger-list > *:nth-child(5) { animation-delay: 160ms; }
-.stagger-list > *:nth-child(6) { animation-delay: 200ms; }
-.stagger-list > *:nth-child(7) { animation-delay: 240ms; }
-.stagger-list > *:nth-child(8) { animation-delay: 280ms; }
-.stagger-list > *:nth-child(9) { animation-delay: 320ms; }
-.stagger-list > *:nth-child(10) { animation-delay: 360ms; }
-.stagger-list > *:nth-child(n+11) { animation-delay: 400ms; }
-
-/* ---- 6. Pulse Glow Animation (play button when paused) ---- */
+/* Pulse glow (play button) */
 @keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 oklch(0.65 0.2 55 / 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 12px oklch(0.65 0.2 55 / 0);
-  }
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.65 0.2 55 / 0.4); }
+  50% { box-shadow: 0 0 0 12px oklch(0.65 0.2 55 / 0); }
 }
-.pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
+.pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 
-/* ---- 7. Waveform Animation (alternative equalizer) ---- */
-@keyframes waveform-1 {
-  0%, 100% { transform: scaleY(0.3); }
-  15% { transform: scaleY(1); }
-  30% { transform: scaleY(0.5); }
-  50% { transform: scaleY(0.8); }
-  65% { transform: scaleY(0.4); }
-  80% { transform: scaleY(0.9); }
-}
-@keyframes waveform-2 {
-  0%, 100% { transform: scaleY(0.5); }
-  15% { transform: scaleY(0.6); }
-  30% { transform: scaleY(1); }
-  50% { transform: scaleY(0.3); }
-  65% { transform: scaleY(0.8); }
-  80% { transform: scaleY(0.5); }
-}
-@keyframes waveform-3 {
-  0%, 100% { transform: scaleY(0.4); }
-  15% { transform: scaleY(0.8); }
-  30% { transform: scaleY(0.3); }
-  50% { transform: scaleY(1); }
-  65% { transform: scaleY(0.6); }
-  80% { transform: scaleY(0.4); }
-}
-@keyframes waveform-4 {
-  0%, 100% { transform: scaleY(0.6); }
-  15% { transform: scaleY(0.4); }
-  30% { transform: scaleY(0.9); }
-  50% { transform: scaleY(0.5); }
-  65% { transform: scaleY(1); }
-  80% { transform: scaleY(0.3); }
-}
-@keyframes waveform-5 {
-  0%, 100% { transform: scaleY(0.35); }
-  15% { transform: scaleY(0.7); }
-  30% { transform: scaleY(0.4); }
-  50% { transform: scaleY(0.6); }
-  65% { transform: scaleY(0.3); }
-  80% { transform: scaleY(1); }
-}
-.waveform-bar {
-  display: inline-block;
-  width: 3px;
-  height: 16px;
-  border-radius: 2px;
-  background: oklch(0.65 0.2 55);
-  transform-origin: bottom;
-}
-.waveform-bar:nth-child(1) { animation: waveform-1 1.2s ease-in-out infinite; }
-.waveform-bar:nth-child(2) { animation: waveform-2 1.1s ease-in-out infinite 0.1s; }
-.waveform-bar:nth-child(3) { animation: waveform-3 1.3s ease-in-out infinite 0.05s; }
-.waveform-bar:nth-child(4) { animation: waveform-4 1.15s ease-in-out infinite 0.15s; }
-.waveform-bar:nth-child(5) { animation: waveform-5 1.25s ease-in-out infinite 0.08s; }
-.waveform-bar.paused {
-  animation-play-state: paused;
-}
-
-/* ---- 8. Smooth Page Transition ---- */
-.page-transition-enter {
-  opacity: 0;
-  transform: translateX(30px);
-}
-.page-transition-enter-active {
-  opacity: 1;
-  transform: translateX(0);
-  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.page-transition-exit {
-  opacity: 1;
-  transform: translateX(0);
-}
-.page-transition-exit-active {
-  opacity: 0;
-  transform: translateX(-30px);
-  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
-              transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* ---- 9. Custom Selection Color (enhanced) ---- */
-/* Base selection already defined above; add Mozilla support */
-::-moz-selection {
-  background: oklch(0.65 0.2 55 / 0.3);
-  color: inherit;
-}
-
-/* ---- 10. Scroll Snap ---- */
-.scroll-snap-x {
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-}
-.scroll-snap-x > * {
-  scroll-snap-align: start;
-  flex-shrink: 0;
-}
-.scroll-snap-y {
-  overflow-y: auto;
-  scroll-snap-type: y mandatory;
-  -webkit-overflow-scrolling: touch;
-}
-.scroll-snap-y > * {
-  scroll-snap-align: start;
-}
-/* Snap to center variant (hero carousels) */
-.scroll-snap-center {
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-}
-.scroll-snap-center > * {
-  scroll-snap-align: center;
-  flex-shrink: 0;
-}
-
-/* ---- 11. Glassmorphism Utility Classes ---- */
-.glass-card {
-  background: oklch(1 0 0 / 8%);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid oklch(1 0 0 / 12%);
-  border-radius: var(--radius-lg, 0.75rem);
-}
-.dark .glass-card {
-  background: oklch(1 0 0 / 6%);
-  border: 1px solid oklch(1 0 0 / 8%);
-}
-.glass-toolbar {
-  background: oklch(1 0 0 / 12%);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border-bottom: 1px solid oklch(1 0 0 / 8%);
-}
-.dark .glass-toolbar {
-  background: oklch(0.145 0 0 / 75%);
-  border-bottom: 1px solid oklch(1 0 0 / 6%);
-}
-.glass-modal {
-  background: oklch(1 0 0 / 15%);
-  backdrop-filter: blur(40px) saturate(200%);
-  -webkit-backdrop-filter: blur(40px) saturate(200%);
-  border: 1px solid oklch(1 0 0 / 15%);
-  border-radius: var(--radius-xl, 1rem);
-  box-shadow: 0 25px 50px -12px oklch(0 0 0 / 0.25);
-}
-.dark .glass-modal {
-  background: oklch(0.205 0 0 / 85%);
-  border: 1px solid oklch(1 0 0 / 10%);
-}
-
-/* ---- 12. Skeleton Loading Enhancement ---- */
-.skeleton-track {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 0;
-}
-.skeleton-track .skeleton-thumb {
-  width: 48px;
-  height: 48px;
-  border-radius: 6px;
-  background: linear-gradient(
-    90deg,
-    oklch(0.94 0 0) 25%,
-    oklch(0.91 0 0) 50%,
-    oklch(0.94 0 0) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-.dark .skeleton-track .skeleton-thumb {
-  background: linear-gradient(
-    90deg,
-    oklch(0.269 0 0) 25%,
-    oklch(0.3 0 0) 50%,
-    oklch(0.269 0 0) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-.skeleton-track .skeleton-line {
-  height: 12px;
-  border-radius: 6px;
-  background: linear-gradient(
-    90deg,
-    oklch(0.94 0 0) 25%,
-    oklch(0.91 0 0) 50%,
-    oklch(0.94 0 0) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-.dark .skeleton-track .skeleton-line {
-  background: linear-gradient(
-    90deg,
-    oklch(0.269 0 0) 25%,
-    oklch(0.3 0 0) 50%,
-    oklch(0.269 0 0) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-.skeleton-track .skeleton-line--title {
-  width: 60%;
-}
-.skeleton-track .skeleton-line--artist {
-  width: 40%;
-  margin-top: 6px;
-  height: 10px;
-}
-/* Skeleton card (album/playlist) */
-.skeleton-card .skeleton-cover {
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: var(--radius-md, 0.5rem);
-  background: linear-gradient(
-    90deg,
-    oklch(0.94 0 0) 25%,
-    oklch(0.91 0 0) 50%,
-    oklch(0.94 0 0) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-.dark .skeleton-card .skeleton-cover {
-  background: linear-gradient(
-    90deg,
-    oklch(0.269 0 0) 25%,
-    oklch(0.3 0 0) 50%,
-    oklch(0.269 0 0) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
-}
-
-/* ---- 13. Toast Notification Animation ---- */
-@keyframes toast-slide-in {
-  from {
-    transform: translateX(100%) scale(0.95);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0) scale(1);
-    opacity: 1;
-  }
-}
-@keyframes toast-slide-out {
-  from {
-    transform: translateX(0) scale(1);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(100%) scale(0.95);
-    opacity: 0;
-  }
-}
-.toast-enter {
-  animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-.toast-exit {
-  animation: toast-slide-out 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-/* ---- 14. Card Hover Effects ---- */
-.card-hover {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 0.2s ease;
-}
-.card-hover:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow:
-    0 12px 32px -8px oklch(0 0 0 / 0.12),
-    0 4px 12px -4px oklch(0.65 0.2 55 / 0.15);
-}
-.card-hover:active {
-  transform: translateY(-1px) scale(1.0);
-  transition-duration: 0.1s;
-}
-/* Dark mode card hover */
-.dark .card-hover:hover {
-  box-shadow:
-    0 12px 32px -8px oklch(0 0 0 / 0.3),
-    0 4px 12px -4px oklch(0.65 0.2 55 / 0.1);
-}
-/* Compact card variant for track lists */
-.card-hover-compact {
-  transition: background-color 0.2s ease,
-              transform 0.2s ease;
-}
-.card-hover-compact:hover {
-  background: oklch(0.97 0.05 55 / 0.5);
-  transform: scale(1.005);
-}
-.dark .card-hover-compact:hover {
-  background: oklch(0.269 0.05 55 / 0.5);
-}
-
-/* ---- 15. Text Gradient Utility ---- */
-.text-gradient-premium {
-  background: linear-gradient(135deg, oklch(0.65 0.2 55), oklch(0.75 0.18 70));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.text-gradient-gold {
-  background: linear-gradient(135deg, oklch(0.8 0.15 80), oklch(0.75 0.18 55), oklch(0.85 0.1 90));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-.text-gradient-sunset {
-  background: linear-gradient(135deg, oklch(0.65 0.25 30), oklch(0.65 0.2 55), oklch(0.7 0.15 80));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ============================================================
-   WEEDMUSIC — STREAMING APP-SPECIFIC UTILITIES
-   ============================================================ */
-
-/* ---- Track Number ---- */
-.track-number {
-  font-variant-numeric: tabular-nums;
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  font-size: 0.85em;
-  min-width: 2ch;
-  text-align: right;
-  color: oklch(0.556 0 0);
-  transition: color 0.15s ease;
-}
-.track-row:hover .track-number {
-  color: oklch(0.65 0.2 55);
-}
-.dark .track-number {
-  color: oklch(0.708 0 0);
-}
-.dark .track-row:hover .track-number {
-  color: oklch(0.65 0.2 55);
-}
-
-/* ---- Stream Badge (FREE / PREMIUM) ---- */
-.stream-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  line-height: 1.4;
-}
-.stream-badge--free {
-  background: oklch(0.92 0 0);
-  color: oklch(0.4 0 0);
-}
-.dark .stream-badge--free {
-  background: oklch(0.3 0 0);
-  color: oklch(0.8 0 0);
-}
-.stream-badge--premium {
-  background: oklch(0.65 0.2 55 / 0.15);
-  color: oklch(0.65 0.2 55);
-  box-shadow: 0 0 8px oklch(0.65 0.2 55 / 0.2);
-  border: 1px solid oklch(0.65 0.2 55 / 0.3);
-}
-.dark .stream-badge--premium {
-  background: oklch(0.65 0.2 55 / 0.12);
-  color: oklch(0.72 0.2 55);
-  box-shadow: 0 0 10px oklch(0.65 0.2 55 / 0.25);
-  border: 1px solid oklch(0.65 0.2 55 / 0.25);
-}
-/* Premium badge glow pulse */
-@keyframes badge-glow {
-  0%, 100% { box-shadow: 0 0 6px oklch(0.65 0.2 55 / 0.2); }
-  50% { box-shadow: 0 0 14px oklch(0.65 0.2 55 / 0.4); }
-}
-.stream-badge--premium {
-  animation: badge-glow 2.5s ease-in-out infinite;
-}
-
-/* ---- Now Playing Indicator (animated bars) ---- */
-.now-playing-indicator {
-  display: inline-flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 14px;
-}
-.now-playing-indicator span {
-  display: block;
-  width: 3px;
-  border-radius: 1px;
-  background: oklch(0.65 0.2 55);
-  transform-origin: bottom;
-}
-.now-playing-indicator span:nth-child(1) {
-  height: 60%;
-  animation: eq1 0.8s ease-in-out infinite;
-}
-.now-playing-indicator span:nth-child(2) {
-  height: 100%;
-  animation: eq2 0.6s ease-in-out infinite 0.1s;
-}
-.now-playing-indicator span:nth-child(3) {
-  height: 40%;
-  animation: eq3 0.7s ease-in-out infinite 0.2s;
-}
-.now-playing-indicator.paused span {
-  animation-play-state: paused;
-}
-
-/* ---- Category Chip ---- */
-.category-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  white-space: nowrap;
-  background: oklch(0.97 0.05 55 / 0.4);
-  color: oklch(0.3 0.05 55);
-  border: 1px solid oklch(0.9 0.05 55);
-  transition: all 0.2s ease;
-  cursor: pointer;
-  user-select: none;
-}
-.category-chip:hover {
-  background: oklch(0.65 0.2 55 / 0.12);
-  border-color: oklch(0.65 0.2 55 / 0.3);
-  color: oklch(0.65 0.2 55);
-  transform: translateY(-1px);
-}
-.category-chip.active {
-  background: oklch(0.65 0.2 55);
-  color: oklch(1 0 0);
-  border-color: oklch(0.65 0.2 55);
-  box-shadow: 0 2px 8px oklch(0.65 0.2 55 / 0.3);
-}
-.dark .category-chip {
-  background: oklch(0.269 0.05 55 / 0.4);
-  color: oklch(0.9 0.05 55);
-  border-color: oklch(0.35 0.05 55);
-}
-.dark .category-chip:hover {
-  background: oklch(0.65 0.2 55 / 0.15);
-  border-color: oklch(0.65 0.2 55 / 0.3);
-  color: oklch(0.72 0.2 55);
-}
-.dark .category-chip.active {
-  background: oklch(0.65 0.2 55);
-  color: oklch(1 0 0);
-  border-color: oklch(0.65 0.2 55);
-}
-
-/* ---- Search Suggestion ---- */
-.search-suggestion {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border-radius: var(--radius-md, 0.5rem);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-.search-suggestion:hover {
-  background: oklch(0.97 0.05 55 / 0.5);
-}
-.dark .search-suggestion:hover {
-  background: oklch(0.269 0.05 55 / 0.5);
-}
-.search-suggestion:focus-visible {
-  outline: 2px solid oklch(0.65 0.2 55);
-  outline-offset: -2px;
-}
-.search-suggestion .suggestion-icon {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  color: oklch(0.556 0 0);
-}
-.dark .search-suggestion .suggestion-icon {
-  color: oklch(0.708 0 0);
-}
-.search-suggestion:hover .suggestion-icon {
-  color: oklch(0.65 0.2 55);
-}
-
-/* ============================================================
-   3D THUMBNAIL CARD STYLES
-   ============================================================ */
-
-/* ---- 3D Card Container ---- */
-.card-3d {
-  perspective: 800px;
-  transform-style: preserve-3d;
-}
-
-.card-3d-inner {
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1),
-              box-shadow 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-  will-change: transform;
-}
-
-.card-3d:hover .card-3d-inner {
-  box-shadow:
-    0 20px 40px -12px oklch(0 0 0 / 0.25),
-    0 8px 16px -8px oklch(0.65 0.2 55 / 0.2),
-    0 0 0 1px oklch(0.65 0.2 55 / 0.1);
-}
-.dark .card-3d:hover .card-3d-inner {
-  box-shadow:
-    0 20px 40px -12px oklch(0 0 0 / 0.5),
-    0 8px 16px -8px oklch(0.65 0.2 55 / 0.15),
-    0 0 0 1px oklch(0.65 0.2 55 / 0.08);
-}
-
-/* ---- 3D Thumbnail with Depth ---- */
-.thumb-3d {
-  position: relative;
-  overflow: hidden;
-  transform: translateZ(0);
-  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.card-3d:hover .thumb-3d {
-  transform: translateZ(20px) scale(1.03);
-}
-
-/* ---- 3D Shine/Reflection Effect ---- */
-.thumb-3d-shine {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    105deg,
-    oklch(1 1 0 / 0) 30%,
-    oklch(1 1 0 / 0.12) 45%,
-    oklch(1 1 0 / 0.25) 50%,
-    oklch(1 1 0 / 0.12) 55%,
-    oklch(1 1 0 / 0) 70%
-  );
-  transform: translateX(-100%);
-  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-  pointer-events: none;
-  z-index: 5;
-}
-.card-3d:hover .thumb-3d-shine {
-  transform: translateX(100%);
-}
-
-/* ---- 3D Depth Shadow Under Card ---- */
-.card-3d-shadow {
-  position: absolute;
-  inset: 5%;
-  background: oklch(0.65 0.2 55 / 0.15);
-  border-radius: var(--radius-xl, 1rem);
-  filter: blur(20px);
-  transform: translateY(10px) translateZ(-10px);
-  opacity: 0;
-  transition: opacity 0.4s ease, transform 0.4s ease;
-  z-index: -1;
-}
-.card-3d:hover .card-3d-shadow {
-  opacity: 1;
-  transform: translateY(15px) translateZ(-10px);
-}
-
-/* ---- 3D Floating Badge ---- */
-.badge-3d {
-  transform: translateZ(30px);
-  transition: transform 0.3s ease;
-}
-.card-3d:hover .badge-3d {
-  transform: translateZ(40px) scale(1.08);
-}
-
-/* ---- 3D Play Button ---- */
-.play-btn-3d {
-  transform: translateZ(40px) scale(0.8);
-  opacity: 0;
-  transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.2s ease;
-}
-.card-3d:hover .play-btn-3d {
-  transform: translateZ(50px) scale(1);
-  opacity: 1;
-}
-
-/* ---- Voice Search Pulse Animation ---- */
-@keyframes voice-pulse {
-  0% {
-    box-shadow: 0 0 0 0 oklch(0.65 0.2 55 / 0.5);
-  }
-  70% {
-    box-shadow: 0 0 0 14px oklch(0.65 0.2 55 / 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 oklch(0.65 0.2 55 / 0);
-  }
-}
-.voice-pulse {
-  animation: voice-pulse 1.5s ease-in-out infinite;
-}
-
-/* Voice wave animation (legacy - for small mic button) */
-@keyframes voice-wave-1 {
-  0%, 100% { height: 4px; }
-  50% { height: 16px; }
-}
-@keyframes voice-wave-2 {
-  0%, 100% { height: 8px; }
-  50% { height: 20px; }
-}
-@keyframes voice-wave-3 {
-  0%, 100% { height: 6px; }
-  50% { height: 14px; }
-}
-@keyframes voice-wave-4 {
-  0%, 100% { height: 10px; }
-  50% { height: 18px; }
-}
-.voice-wave-1 { animation: voice-wave-1 0.6s ease-in-out infinite; }
-.voice-wave-2 { animation: voice-wave-2 0.5s ease-in-out infinite 0.1s; }
-.voice-wave-3 { animation: voice-wave-3 0.7s ease-in-out infinite 0.15s; }
-.voice-wave-4 { animation: voice-wave-4 0.55s ease-in-out infinite 0.05s; }
-
-/* ---- Voice Search Full-Screen Overlay ---- */
-@keyframes voice-ring-expand {
-  0% { transform: scale(1); opacity: 0.3; }
-  100% { transform: scale(1.5); opacity: 0; }
-}
-.voice-ring-1 {
-  animation: voice-ring-expand 2s ease-out infinite;
-}
-.voice-ring-2 {
-  animation: voice-ring-expand 2s ease-out infinite 0.5s;
-}
-
-/* Voice bar animation (active - hearing speech) */
-@keyframes voice-bar-active {
-  0%, 100% { height: 8px; }
-  10% { height: 20px; }
-  20% { height: 12px; }
-  30% { height: 28px; }
-  40% { height: 16px; }
-  50% { height: 24px; }
-  60% { height: 10px; }
-  70% { height: 30px; }
-  80% { height: 14px; }
-  90% { height: 22px; }
-}
-.voice-bar-active {
-  animation: voice-bar-active 1.2s ease-in-out infinite;
-}
-
-/* Voice bar animation (idle - waiting for speech) */
-@keyframes voice-bar-idle {
-  0%, 100% { height: 6px; }
-  50% { height: 10px; }
-}
-.voice-bar-idle {
-  animation: voice-bar-idle 1.5s ease-in-out infinite;
-}
-
-/* ============================================================
-   WEEDMUSIC — WEED GRASS DECORATIONS
-   ============================================================ */
-
-/* ---- Animated Weed Grass Blades ---- */
-@keyframes grass-sway {
-  0%, 100% { transform: rotate(-5deg) scaleY(1); }
-  25% { transform: rotate(3deg) scaleY(1.02); }
-  50% { transform: rotate(-3deg) scaleY(0.98); }
-  75% { transform: rotate(5deg) scaleY(1.01); }
-}
-@keyframes grass-sway-alt {
-  0%, 100% { transform: rotate(4deg) scaleY(0.98); }
-  25% { transform: rotate(-5deg) scaleY(1.01); }
-  50% { transform: rotate(3deg) scaleY(1.02); }
-  75% { transform: rotate(-4deg) scaleY(0.99); }
-}
-
-.grass-blade {
-  position: absolute;
-  bottom: 0;
-  width: 6px;
-  border-radius: 3px 3px 0 0;
-  transform-origin: bottom center;
-  animation: grass-sway 4s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 1;
-}
-.grass-blade:nth-child(even) {
-  animation: grass-sway-alt 3.5s ease-in-out infinite;
-}
-.grass-blade:nth-child(3n) {
-  animation-delay: -1s;
-}
-.grass-blade:nth-child(5n) {
-  animation-delay: -2s;
-}
-
-/* ---- Grass Patch (bottom border decoration) ---- */
-.grass-patch {
-  position: relative;
-  width: 100%;
-  height: 40px;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-/* ---- Weed Leaf Decoration ---- */
-.weed-leaf {
-  display: inline-block;
-  font-size: 1.2em;
-  animation: grass-sway 3s ease-in-out infinite;
-}
-
-/* ---- Floating Weed Particles ---- */
-@keyframes float-up {
-  0% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
-  50% { transform: translateY(-30px) rotate(180deg); opacity: 0.4; }
-  100% { transform: translateY(-60px) rotate(360deg); opacity: 0; }
-}
-.weed-particle {
-  position: absolute;
-  font-size: 14px;
-  pointer-events: none;
-  animation: float-up 6s ease-out infinite;
-}
-.weed-particle:nth-child(2) { animation-delay: 1.5s; }
-.weed-particle:nth-child(3) { animation-delay: 3s; }
-.weed-particle:nth-child(4) { animation-delay: 4.5s; }
-
-/* ---- Grass Border (top/bottom edges) ---- */
-.grass-border-top {
-  position: relative;
-}
-.grass-border-top::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    oklch(0.55 0.17 140 / 0.4) 10%,
-    oklch(0.5 0.2 140 / 0.6) 20%,
-    oklch(0.6 0.18 140 / 0.3) 30%,
-    oklch(0.45 0.2 140 / 0.5) 40%,
-    oklch(0.55 0.17 140 / 0.7) 50%,
-    oklch(0.5 0.2 140 / 0.4) 60%,
-    oklch(0.6 0.18 140 / 0.6) 70%,
-    oklch(0.45 0.2 140 / 0.3) 80%,
-    oklch(0.55 0.17 140 / 0.5) 90%,
-    transparent 100%
-  );
-  z-index: 2;
-}
-.grass-border-bottom::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    oklch(0.55 0.17 140 / 0.4) 10%,
-    oklch(0.5 0.2 140 / 0.6) 20%,
-    oklch(0.6 0.18 140 / 0.3) 30%,
-    oklch(0.45 0.2 140 / 0.5) 40%,
-    oklch(0.55 0.17 140 / 0.7) 50%,
-    oklch(0.5 0.2 140 / 0.4) 60%,
-    oklch(0.6 0.18 140 / 0.6) 70%,
-    oklch(0.45 0.2 140 / 0.3) 80%,
-    oklch(0.55 0.17 140 / 0.5) 90%,
-    transparent 100%
-  );
-  z-index: 2;
-}
-
-/* ---- Background Weed Pattern ---- */
-.weed-bg-pattern {
-  background-image:
-    radial-gradient(oklch(0.55 0.17 140 / 0.05) 1px, transparent 1px),
-    radial-gradient(oklch(0.5 0.2 140 / 0.03) 1px, transparent 1px);
-  background-size: 40px 40px, 60px 60px;
-  background-position: 0 0, 20px 20px;
-}
-
-/* ============================================================
-   WEEDMUSIC — 3D MUSIC PLAYER STYLES
-   ============================================================ */
-
-/* ---- 3D Player Container ---- */
-.player-3d {
-  background: linear-gradient(
-    180deg,
-    oklch(1 0 0 / 0.92) 0%,
-    oklch(0.98 0.02 55 / 0.95) 100%
-  );
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  box-shadow:
-    0 -4px 20px oklch(0 0 0 / 0.08),
-    0 -1px 0 oklch(0.65 0.2 55 / 0.1),
-    inset 0 1px 0 oklch(1 0 0 / 0.5);
-  border-top: 1px solid oklch(0.65 0.2 55 / 0.15);
-}
-.dark .player-3d {
-  background: linear-gradient(
-    180deg,
-    oklch(0.145 0 0 / 0.95) 0%,
-    oklch(0.12 0.02 55 / 0.97) 100%
-  );
-  box-shadow:
-    0 -4px 20px oklch(0 0 0 / 0.3),
-    0 -1px 0 oklch(0.65 0.2 55 / 0.15),
-    inset 0 1px 0 oklch(1 0 0 / 0.05);
-  border-top: 1px solid oklch(0.65 0.2 55 / 0.1);
-}
-
-/* ---- 3D Album Art in Player ---- */
-.player-thumb-3d {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow:
-    0 4px 12px oklch(0 0 0 / 0.15),
-    0 2px 4px oklch(0 0 0 / 0.1),
-    inset 0 0 0 1px oklch(1 0 0 / 0.1);
-  transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1),
-              box-shadow 0.3s ease;
-  transform: perspective(400px) rotateY(-2deg) translateZ(0);
-}
-.player-thumb-3d:hover {
-  transform: perspective(400px) rotateY(0deg) translateZ(10px) scale(1.05);
-  box-shadow:
-    0 8px 24px oklch(0 0 0 / 0.2),
-    0 4px 8px oklch(0 0 0 / 0.15),
-    0 0 20px oklch(0.65 0.2 55 / 0.15),
-    inset 0 0 0 1px oklch(1 0 0 / 0.15);
-}
-
-/* ---- 3D Play Button ---- */
-.play-btn-3d-player {
-  position: relative;
-  border-radius: 50%;
-  background: linear-gradient(135deg, oklch(0.65 0.2 55), oklch(0.55 0.22 45));
-  box-shadow:
-    0 4px 12px oklch(0.65 0.2 55 / 0.35),
-    0 2px 4px oklch(0 0 0 / 0.15),
-    inset 0 1px 0 oklch(1 0 0 / 0.25),
-    inset 0 -1px 0 oklch(0 0 0 / 0.15);
-  transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.play-btn-3d-player:hover {
-  transform: scale(1.08);
-  box-shadow:
-    0 6px 20px oklch(0.65 0.2 55 / 0.45),
-    0 3px 6px oklch(0 0 0 / 0.2),
-    inset 0 1px 0 oklch(1 0 0 / 0.3),
-    inset 0 -1px 0 oklch(0 0 0 / 0.2);
-}
-.play-btn-3d-player:active {
-  transform: scale(0.95);
-  box-shadow:
-    0 2px 6px oklch(0.65 0.2 55 / 0.3),
-    0 1px 2px oklch(0 0 0 / 0.1),
-    inset 0 1px 0 oklch(1 0 0 / 0.2);
-}
-
-/* ---- 3D Seek Bar ---- */
-.seek-bar-3d {
-  position: relative;
-  height: 4px;
-  border-radius: 2px;
-  background: oklch(0.85 0 0 / 0.4);
-  overflow: visible;
-  transition: height 0.15s ease;
-  cursor: pointer;
-}
-.seek-bar-3d:hover {
-  height: 6px;
-}
-.dark .seek-bar-3d {
-  background: oklch(0.4 0 0 / 0.4);
-}
-.seek-bar-3d-fill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  border-radius: 2px;
-  background: linear-gradient(90deg, oklch(0.55 0.2 55), oklch(0.65 0.2 55));
-  box-shadow: 0 0 8px oklch(0.65 0.2 55 / 0.4);
-  transition: width 0.1s linear;
-}
-.seek-bar-3d-thumb {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, oklch(0.65 0.2 55), oklch(0.75 0.18 55));
-  box-shadow:
-    0 2px 8px oklch(0.65 0.2 55 / 0.4),
-    0 0 0 3px oklch(1 0 0 / 0.9),
-    inset 0 1px 0 oklch(1 0 0 / 0.3);
-  transition: transform 0.15s ease;
-  z-index: 5;
-}
-.seek-bar-3d:hover .seek-bar-3d-thumb {
-  transform: translate(-50%, -50%) scale(1);
-}
-
-/* ---- 3D Control Buttons ---- */
-.ctrl-btn-3d {
-  position: relative;
-  border-radius: 50%;
-  transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
-}
-.ctrl-btn-3d:hover {
-  background: oklch(0.65 0.2 55 / 0.1);
-  transform: translateY(-1px);
-}
-.ctrl-btn-3d:active {
-  transform: translateY(0) scale(0.92);
-}
-.ctrl-btn-3d.active {
-  color: oklch(0.65 0.2 55);
-}
-
-/* ---- Weed Leaf Corner Decorations ---- */
-.weed-corner-tl {
-  position: fixed;
-  top: 8px;
-  left: 8px;
-  font-size: 20px;
-  opacity: 0.15;
-  pointer-events: none;
-  z-index: 0;
-  animation: grass-sway 5s ease-in-out infinite;
-}
-.weed-corner-br {
-  position: fixed;
-  bottom: 80px;
-  right: 8px;
-  font-size: 20px;
-  opacity: 0.15;
-  pointer-events: none;
-  z-index: 0;
-  animation: grass-sway-alt 5s ease-in-out infinite;
-}
-
-/* ---- Full-Screen Layout ---- */
-.full-width-content {
-  width: 100%;
-  max-width: 100%;
-}
-
-/* ---- Kids Mode Card Frame ---- */
-.kids-frame-card {
-  position: relative;
-  border-radius: 20px;
-  overflow: hidden;
-  background: linear-gradient(145deg, oklch(1 0 0), oklch(0.97 0.05 140));
-  border: 3px solid oklch(0.6 0.17 140 / 0.4);
-  box-shadow:
-    0 8px 24px oklch(0 0 0 / 0.08),
-    0 2px 8px oklch(0.55 0.17 140 / 0.15),
-    inset 0 1px 0 oklch(1 0 0 / 0.6);
-  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-  cursor: pointer;
-}
-.kids-frame-card:hover {
-  transform: translateY(-4px) scale(1.03);
-  box-shadow:
-    0 16px 40px oklch(0 0 0 / 0.12),
-    0 4px 12px oklch(0.55 0.17 140 / 0.25),
-    0 0 0 3px oklch(0.55 0.17 140 / 0.3);
-  border-color: oklch(0.55 0.17 140 / 0.7);
-}
-.kids-frame-card:active {
-  transform: translateY(-1px) scale(0.98);
-}
-.dark .kids-frame-card {
-  background: linear-gradient(145deg, oklch(0.205 0.03 140), oklch(0.18 0.04 140));
-  border-color: oklch(0.55 0.17 140 / 0.3);
-  box-shadow:
-    0 8px 24px oklch(0 0 0 / 0.2),
-    0 2px 8px oklch(0.55 0.17 140 / 0.1);
-}
-.dark .kids-frame-card:hover {
-  border-color: oklch(0.55 0.17 140 / 0.5);
-  box-shadow:
-    0 16px 40px oklch(0 0 0 / 0.3),
-    0 4px 12px oklch(0.55 0.17 140 / 0.15),
-    0 0 0 3px oklch(0.55 0.17 140 / 0.2);
-}
-
-/* ---- Kids Frame Card Ribbon Badge ---- */
-.kids-ribbon {
-  position: absolute;
-  top: 8px;
-  left: -4px;
-  padding: 2px 10px 2px 8px;
-  background: linear-gradient(135deg, oklch(0.55 0.17 140), oklch(0.5 0.2 140));
-  color: white;
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  border-radius: 0 4px 4px 0;
-  box-shadow: 0 2px 4px oklch(0 0 0 / 0.15);
-  z-index: 5;
-}
-.kids-ribbon::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -4px;
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 4px 0 0 4px;
-  border-color: oklch(0.35 0.15 140) transparent transparent transparent;
-}
-
-/* ---- Kids Mode Bubbles Background ---- */
-@keyframes bubble-float {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.15; }
-  50% { transform: translateY(-20px) scale(1.1); opacity: 0.25; }
-}
-.kids-bubble {
-  position: absolute;
-  border-radius: 50%;
-  background: oklch(0.7 0.15 140 / 0.15);
-  pointer-events: none;
-  animation: bubble-float 4s ease-in-out infinite;
-}
-
-/* ---- Full-Width Content Area ---- */
 @media (min-width: 1024px) {
   .content-fullscreen {
     margin-left: 0 !important;

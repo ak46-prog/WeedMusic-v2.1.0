@@ -426,9 +426,106 @@ async function resolveFromInvidious(
   };
 
   try {
-    // Only try 3 instances in parallel for faster resolution
+    // Try 6 instances in parallel for better success rate
     const results = await Promise.allSettled(
-      INVIDIOUS_INSTANCES.slice(0, 3).map(tryInstance),
+      INVIDIOUS_INSTANCES.slice(0, 6).map(tryInstance),
+    );
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value) return r.value;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/* ====================================================================
+   LAYER 4: Piped API (audio stream resolution)
+   ==================================================================== */
+
+const PIPED_INSTANCES = [
+  'https://pipedapi.kavin.rocks',
+  'https://pipedapi.adminforge.de',
+  'https://pipedapi.in.projectsegfau.lt',
+  'https://pipedapi-libre.kavin.rocks',
+  'https://api.piped.yt',
+  'https://pipedapi.r4fo.com',
+  'https://pipedapi.moomoo.me',
+];
+
+async function resolveFromPiped(
+  videoId: string,
+  streamType: 'audio' | 'video',
+): Promise<StreamInfo | null> {
+  const tryInstance = async (instance: string): Promise<StreamInfo | null> => {
+    try {
+      const res = await fetch(`${instance}/streams/${videoId}`, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (!data.audioStreams && !data.videoStreams) return null;
+
+      const audioStreams: any[] = data.audioStreams || [];
+      const videoStreams: any[] = data.videoStreams || [];
+
+      // --- AUDIO: prefer m4a/mp4, then best bitrate ---
+      const mp4Audio = audioStreams
+        .filter((s: any) => s.url && (s.mimeType?.includes('mp4') || s.mimeType?.includes('m4a')))
+        .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0));
+
+      const webmAudio = audioStreams
+        .filter((s: any) => s.url && s.mimeType?.includes('webm'))
+        .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0));
+
+      const bestAudio = mp4Audio[0] || webmAudio[0] || audioStreams.find((s: any) => s.url);
+      if (!bestAudio?.url) return null;
+
+      // --- VIDEO ---
+      let videoUrl: string | undefined;
+      let videoQuality: number | undefined;
+
+      if (streamType === 'video') {
+        // Piped provides proxied video URLs
+        const combinedVideo = videoStreams
+          .filter((s: any) => s.url && s.videoOnly === false)
+          .sort((a: any, b: any) => (b.bitrate || 0) - (a.bitrate || 0));
+        const adaptiveVideo = videoStreams
+          .filter((s: any) => s.url && s.videoOnly === true)
+          .sort((a: any, b: any) => (b.height || 0) - (a.height || 0));
+
+        const bestVideo = combinedVideo[0] || adaptiveVideo[0];
+        if (bestVideo) {
+          videoUrl = bestVideo.url;
+          videoQuality = bestVideo.height || 0;
+        }
+      }
+
+      return {
+        audioUrl: bestAudio.url,
+        mimeType: normalizeContentType(bestAudio.mimeType || 'audio/mp4'),
+        duration: data.duration || 0,
+        title: data.title || '',
+        artist: data.uploader || '',
+        thumbnail: data.thumbnailUrl || data.uploaderAvatar || '',
+        source: 'e',
+        videoUrl,
+        videoQuality,
+      };
+    } catch {
+      return null;
+    }
+  };
+
+  try {
+    // Try 3 Piped instances in parallel
+    const results = await Promise.allSettled(
+      PIPED_INSTANCES.slice(0, 3).map(tryInstance),
     );
     for (const r of results) {
       if (r.status === 'fulfilled' && r.value) return r.value;
@@ -458,24 +555,29 @@ async function resolveStreamInfo(
 
   // Create ALL resolver promises with individual timeouts
   const resolvers: Promise<StreamInfo>[] = [
-    // Layer 1: ytdl-core — 3s timeout (fast primary)
-    withTimeout(resolveFromLayer1(videoId, streamType), 3000, 'L1').then(
+    // Layer 1: ytdl-core — 5s timeout (primary resolver)
+    withTimeout(resolveFromLayer1(videoId, streamType), 5000, 'L1').then(
       (r) => r ?? Promise.reject(new Error('L1 failed')),
     ),
 
-    // Layer 2a: InnerTube ANDROID_MUSIC — 3s timeout (fastest usually)
-    withTimeout(resolveFromInnerTube(videoId, 'ANDROID_MUSIC', streamType), 3000, 'L2-AM').then(
+    // Layer 2a: InnerTube ANDROID_MUSIC — 4s timeout (usually fastest)
+    withTimeout(resolveFromInnerTube(videoId, 'ANDROID_MUSIC', streamType), 4000, 'L2-AM').then(
       (r) => r ?? Promise.reject(new Error('L2-AM failed')),
     ),
 
-    // Layer 2b: InnerTube TVHTML5 — 3.5s timeout
-    withTimeout(resolveFromInnerTube(videoId, 'TVHTML5', streamType), 3500, 'L2-TV').then(
+    // Layer 2b: InnerTube TVHTML5 — 5s timeout
+    withTimeout(resolveFromInnerTube(videoId, 'TVHTML5', streamType), 5000, 'L2-TV').then(
       (r) => r ?? Promise.reject(new Error('L2-TV failed')),
     ),
 
-    // Layer 3: Invidious (already internally tries 3 instances) — 4s timeout
-    withTimeout(resolveFromInvidious(videoId, streamType), 4000, 'L3').then(
+    // Layer 3: Invidious (internally tries 6 instances) — 6s timeout
+    withTimeout(resolveFromInvidious(videoId, streamType), 6000, 'L3').then(
       (r) => r ?? Promise.reject(new Error('L3 failed')),
+    ),
+
+    // Layer 4: Piped (internally tries 3 instances) — 6s timeout
+    withTimeout(resolveFromPiped(videoId, streamType), 6000, 'L4').then(
+      (r) => r ?? Promise.reject(new Error('L4 failed')),
     ),
   ];
 

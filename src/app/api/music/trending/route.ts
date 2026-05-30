@@ -69,6 +69,36 @@ function parseMusicShelfItems(shelfRenderer: any): any[] {
   return items;
 }
 
+/* ---------- Music filter: remove non-music content ---------- */
+
+const NON_MUSIC_KEYWORDS = [
+  'live:', 'en vivo', 'breaking', 'news', 'trump', 'biden', 'politics',
+  'attack', 'war', 'strike', 'captured', 'fox news', 'nbc news', 'cnn',
+  'telemundo', 'associated press', 'livenow', 'press conference',
+  'livestream', 'stream:', '🔴', 'watch live', 'alert',
+];
+
+function isMusicTrack(item: any): boolean {
+  const title = (item.title || '').toLowerCase();
+  const artist = (item.artist || item.uploaderName || '').toLowerCase();
+
+  // Filter out livestreams (duration -1 or 0 means live/unknown)
+  if (item.duration === -1 || item.duration === 0) return false;
+
+  // Filter out very short videos (< 30s, likely not songs)
+  if (item.duration > 0 && item.duration < 30) return false;
+
+  // Filter out very long videos (> 3 hours, likely not songs)
+  if (item.duration > 10800) return false;
+
+  // Filter out known non-music keywords
+  for (const keyword of NON_MUSIC_KEYWORDS) {
+    if (title.includes(keyword) || artist.includes(keyword)) return false;
+  }
+
+  return true;
+}
+
 /* ---------- InnerTube Search Fallback ---------- */
 
 async function searchInnerTube(query: string): Promise<any[]> {
@@ -98,6 +128,43 @@ async function searchInnerTube(query: string): Promise<any[]> {
   }
 }
 
+/* ---------- Piped Music Trending (music category) ---------- */
+
+async function fetchPipedMusicTrending(): Promise<any[]> {
+  // Try Piped music trending endpoint first (returns music-specific content)
+  for (const instance of PIPED_INSTANCES) {
+    try {
+      const res = await fetch(`${instance}/trending?region=US`, {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!res.ok) continue;
+      const pipedData = await res.json();
+      if (!Array.isArray(pipedData) || pipedData.length === 0) continue;
+
+      // Map and filter to music-only content
+      const musicItems = pipedData
+        .map((item: any) => ({
+          videoId: item.url?.replace('/watch?v=', '') || '',
+          title: item.title || 'Unknown',
+          artist: item.uploaderName || item.uploader?.name || 'Unknown',
+          thumbnail: item.thumbnail || '',
+          duration: item.duration || 0,
+          isPaid: false,
+        }))
+        .filter((item: any) => item.videoId && isMusicTrack(item));
+
+      if (musicItems.length >= 5) {
+        console.log(`[trending] Piped (${instance}) returned ${musicItems.length} music items`);
+        return musicItems;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return [];
+}
+
 /* ---------- Main Handler ---------- */
 
 export async function GET() {
@@ -108,48 +175,36 @@ export async function GET() {
 
   let items: any[] = [];
 
-  // 1. Try Piped trending endpoint
-  let pipedData: any = null;
-  for (const instance of PIPED_INSTANCES) {
-    try {
-      const res = await fetch(`${instance}/trending?region=US`, {
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(10000),
-      });
-      if (res.ok) {
-        pipedData = await res.json();
-        if (Array.isArray(pipedData) && pipedData.length > 0) break;
-        pipedData = null;
+  // STRATEGY: Run music-specific sources in parallel for fastest results
+  const [pipedMusic, innerTubeMusic] = await Promise.all([
+    fetchPipedMusicTrending(),
+    // Also search InnerTube for trending music in parallel
+    (async () => {
+      const queries = ['top songs 2025', 'trending music this week', 'popular hits playlist'];
+      for (const q of queries) {
+        const results = await searchInnerTube(q);
+        if (results.length > 0) return results;
       }
-    } catch {
-      continue;
-    }
-  }
+      return [];
+    })(),
+  ]);
 
-  if (pipedData && Array.isArray(pipedData) && pipedData.length > 0) {
-    items = pipedData.slice(0, 20).map((item: any) => ({
-      videoId: item.url?.replace('/watch?v=', '') || '',
-      title: item.title || 'Unknown',
-      artist: item.uploaderName || item.uploader?.name || 'Unknown',
-      thumbnail: item.thumbnail || '',
-      duration: item.duration || 0,
-      isPaid: false,
-    })).filter((item: any) => item.videoId);
-  }
-
-  // 2. Fallback: use InnerTube search for trending music
-  if (items.length === 0) {
-    console.log('[trending] Piped returned empty, using InnerTube search fallback...');
-    const TRENDING_QUERIES = ['trending music 2025', 'top hits this week', 'popular songs right now'];
-
-    for (const query of TRENDING_QUERIES) {
-      const searchResults = await searchInnerTube(query);
-      if (searchResults.length > 0) {
-        items = searchResults;
-        console.log(`[trending] InnerTube search "${query}" returned ${items.length} items`);
-        break;
-      }
-    }
+  // Prefer InnerTube results (music-specific), then Piped filtered results
+  if (innerTubeMusic.length >= 5) {
+    items = innerTubeMusic;
+    console.log(`[trending] Using InnerTube results: ${items.length} items`);
+  } else if (pipedMusic.length >= 5) {
+    items = pipedMusic;
+    console.log(`[trending] Using Piped filtered results: ${items.length} items`);
+  } else {
+    // Merge both, deduplicate by videoId, and filter
+    const seen = new Set<string>();
+    const merged = [...innerTubeMusic, ...pipedMusic].filter((item) => {
+      if (seen.has(item.videoId)) return false;
+      seen.add(item.videoId);
+      return isMusicTrack(item);
+    });
+    items = merged;
   }
 
   // Update cache

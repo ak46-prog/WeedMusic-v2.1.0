@@ -305,6 +305,19 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // Filter out livestreams and very short/long content (likely not songs)
+  if (items.length > 0) {
+    items = items.filter((item: any) => {
+      // Remove livestreams (duration=-1 means live)
+      if (item.duration === -1) return false;
+      // Remove very short content (< 30s, likely not songs)
+      if (item.duration > 0 && item.duration < 30) return false;
+      // Remove very long content (> 3 hours, likely podcasts/livestreams)
+      if (item.duration > 10800) return false;
+      return true;
+    });
+  }
+
   // Child mode: filter out explicit content
   if (safeSearch && items.length > 0) {
     const explicitWords = ['explicit', 'nsfw', '18+', 'adult', 'xxx', 'sexy', 'naked'];

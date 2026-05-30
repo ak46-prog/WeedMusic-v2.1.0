@@ -276,10 +276,10 @@ export function AudioManager() {
         data = { directUrl: cached.url, mimeType: cached.mime };
         preloadCacheRef.current.delete(videoId);
       } else {
-        // Fast 2.5-second timeout — proxy uses Promise.any so it's fast
+        // 5-second timeout — proxy uses Promise.any for fast resolution
         const res = await fetch(
           `/api/music/proxy?id=${encodeURIComponent(videoId)}`,
-          { signal: AbortSignal.timeout(2500) },
+          { signal: AbortSignal.timeout(5000) },
         );
 
         if (changeId !== trackChangeIdRef.current) return;
@@ -315,13 +315,46 @@ export function AudioManager() {
         await audio.play();
         isLoadingRef.current = false;
         useMusicStore.getState().setIsLoading(false);
-      } catch {
-        // Direct audio failed — switch back to YouTube
+        console.log(`[audio] ✅ Direct audio playing: ${videoId}`);
+      } catch (playErr) {
+        // Direct audio play failed — try Invidious fallback URLs
+        console.log(`[audio] Direct play failed, trying Invidious fallbacks for ${videoId}`);
+        try {
+          const fallbackRes = await fetch(
+            `/api/music/proxy?id=${encodeURIComponent(videoId)}`,
+            { signal: AbortSignal.timeout(3000) },
+          );
+          if (fallbackRes.ok) {
+            const fallbackData = await fallbackRes.json();
+            const fallbacks = fallbackData.invidiousFallbacks || [];
+            for (const fb of fallbacks) {
+              try {
+                audio.innerHTML = '';
+                const fbSource = document.createElement('source');
+                fbSource.src = fb.url;
+                fbSource.type = fb.mimeType || 'audio/mp4';
+                audio.appendChild(fbSource);
+                audio.load();
+                await audio.play();
+                isLoadingRef.current = false;
+                useMusicStore.getState().setIsLoading(false);
+                console.log(`[audio] ✅ Invidious fallback playing: ${videoId}`);
+                return;
+              } catch {
+                continue;
+              }
+            }
+          }
+        } catch {
+          // Fallbacks exhausted
+        }
+        // All fallbacks failed — switch back to YouTube
         playbackModeRef.current = 'youtube';
         audio.innerHTML = '';
         if (ytPlayerRef.current) {
           try { ytPlayerRef.current.playVideo(); } catch { /* */ }
         }
+        console.log(`[audio] Falling back to YouTube IFrame for ${videoId}`);
       }
     } catch {
       // Proxy failed — YouTube IFrame continues playing

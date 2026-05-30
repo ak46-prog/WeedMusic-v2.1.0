@@ -1,15 +1,16 @@
-name: Deploy WeedMusic
+name: CI/CD - WeedMusic
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, develop, staging, 'release/**', 'hotfix/**']
   pull_request:
-    branches: [main, master]
+    branches: [main, develop, staging]
 
 env:
   NODE_VERSION: '20'
 
 jobs:
+  # ─── Stage 1: Lint & Type Check ───
   lint-and-typecheck:
     name: Lint & Type Check
     runs-on: ubuntu-latest
@@ -17,20 +18,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Type check
-        run: bunx tsc --noEmit || true
+        run: npx tsc --noEmit || true
 
       - name: Lint
-        run: bun run lint || true
+        run: npm run lint || true
 
+  # ─── Stage 2: Build ───
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -39,47 +42,75 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
 
       - name: Install dependencies
-        run: bun install --frozen-lockfile
+        run: npm ci
 
       - name: Generate Prisma Client
-        run: bun run db:generate
+        run: npx prisma generate
 
       - name: Build
-        run: bun run build
+        run: npm run build
         env:
           DATABASE_URL: file:./tmp.db
 
-  deploy-vercel:
-    name: Deploy to Vercel
+  # ─── Stage 3: Deploy Staging ───
+  deploy-staging:
+    name: Deploy Staging
     runs-on: ubuntu-latest
     needs: build
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/staging'
+    environment:
+      name: staging
+      url: https://weedmusic-staging.vercel.app
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
+      - name: Install Vercel CLI
+        run: npm i -g vercel@latest
+
+      - name: Pull Vercel Environment (Staging)
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        continue-on-error: true
+
+      - name: Build with Vercel (Staging)
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        continue-on-error: true
+
+      - name: Deploy to Vercel (Staging)
+        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+        continue-on-error: true
+
+  # ─── Stage 4: Deploy Production ───
+  deploy-production:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    environment:
+      name: production
+      url: https://weedmusic.vercel.app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Install Vercel CLI
-        run: bun add -g vercel@latest
+        run: npm i -g vercel@latest
 
-      - name: Pull Vercel Environment
+      - name: Pull Vercel Environment (Production)
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
         continue-on-error: true
 
-      - name: Build with Vercel
+      - name: Build with Vercel (Production)
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
         continue-on-error: true
 
-      - name: Deploy to Vercel
+      - name: Deploy to Vercel (Production)
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
         continue-on-error: true

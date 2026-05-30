@@ -1,7 +1,8 @@
 {
-  "name": "nextjs_tailwind_shadcn_ts",
-  "version": "0.2.0",
-  "private": true,
+  "name": "weedmusic",
+  "version": "2.1.0",
+  "private": false,
+  "description": "WeedMusic - Free Ad-Free Music Streaming App with YouTube, Radio, Kids Mode, Car Mode & PWA Support",
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
     "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",

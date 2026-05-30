@@ -119,7 +119,7 @@ function parseDurationText(text: string): number {
 async function searchInnerTube(query: string, filter: string): Promise<any[]> {
   const params = filter !== 'all' ? INNERTUBE_FILTER_PARAMS[filter] : undefined;
   const body: any = {
-    context: { client: { clientName: 'WEB_REMIX', clientVersion: '1.20241210.00.00', hl: 'en' } },
+    context: { client: { clientName: 'WEB_REMIX', clientVersion: '1.20250525.00.00', hl: 'en' } },
     query,
   };
   if (params) body.params = params;

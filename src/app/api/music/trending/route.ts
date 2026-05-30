@@ -111,7 +111,7 @@ async function searchInnerTube(query: string): Promise<any[]> {
         Origin: 'https://music.youtube.com',
       },
       body: JSON.stringify({
-        context: { client: { clientName: 'WEB_REMIX', clientVersion: '1.20241210.00.00', hl: 'en' } },
+        context: { client: { clientName: 'WEB_REMIX', clientVersion: '1.20250525.00.00', hl: 'en' } },
         query,
         params: 'EgWKAQIIAWoKEAkQCRADEAoQDQ==', // songs filter
       }),

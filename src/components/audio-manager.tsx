@@ -666,8 +666,8 @@ export function AudioManager() {
       <audio ref={audioRef} preload="auto" />
       <div
         ref={ytContainerRef}
-        className="fixed w-px h-px overflow-hidden opacity-0 pointer-events-none"
-        style={{ top: '-100px', left: '-100px' }}
+        className="fixed w-0 h-0 overflow-hidden pointer-events-none"
+        style={{ top: '-9999px', left: '-9999px', clip: 'rect(0,0,0,0)' }}
         aria-hidden="true"
       />
     </>

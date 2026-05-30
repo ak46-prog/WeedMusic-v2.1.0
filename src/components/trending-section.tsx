@@ -33,13 +33,13 @@ export function TrendingSection() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="size-5 text-orange-500" />
-          <h2 className="text-xl font-bold">Trending Now</h2>
+          <h2 className="text-xl font-bold flex items-center gap-2">Trending Now <span className="weed-leaf text-sm">🌿</span></h2>
         </div>
         <Button
           variant="ghost"
           size="sm"
           className="text-orange-500 hover:text-orange-600 gap-1"
-          onClick={() => useMusicStore.setState({ searchQuery: 'trending music 2024', view: 'search' })}
+          onClick={() => useMusicStore.setState({ searchQuery: 'trending music 2025', view: 'search' })}
         >
           See all
           <ChevronRight className="size-4" />
@@ -47,7 +47,7 @@ export function TrendingSection() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
             <div key={i}>
               <Skeleton className="aspect-square w-full rounded-xl" />
@@ -62,7 +62,7 @@ export function TrendingSection() {
           <p className="text-sm mt-1">Check back later!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4 stagger-list">
           {tracks.map((track) => (
             <TrackCard key={track.videoId} track={track} variant="grid" />
           ))}

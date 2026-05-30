@@ -139,7 +139,7 @@ export function MusicPlayer() {
   };
 
   /* ====================================================================
-     SEEK BAR HANDLERS — Enhanced for instant hover-to-seek
+     SEEK BAR HANDLERS
      ==================================================================== */
 
   const seekToTime = useCallback((time: number) => {
@@ -147,7 +147,6 @@ export function MusicPlayer() {
     if (seekFn) {
       seekFn(time);
     } else {
-      // Fallback: directly set audio element
       const audio = document.querySelector('audio');
       if (audio) audio.currentTime = time;
     }
@@ -270,9 +269,11 @@ export function MusicPlayer() {
 
   if (!currentTrack) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:left-60">
-        <div className="flex items-center justify-center h-20 text-muted-foreground text-sm">
+      <div className="fixed bottom-0 left-0 right-0 z-40 player-3d player-fullscreen">
+        <div className="flex items-center justify-center h-20 text-muted-foreground text-sm gap-2">
+          <span className="weed-leaf">🌿</span>
           <p>Select a song to start playing</p>
+          <span className="weed-leaf">🌿</span>
         </div>
       </div>
     );
@@ -280,8 +281,29 @@ export function MusicPlayer() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:left-60">
-        {/* Progress/Seek Bar — Enhanced with hover preview */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 player-3d player-fullscreen">
+        {/* Weed grass decoration strip at very top of player */}
+        <div className="relative h-2 pointer-events-none overflow-hidden">
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div
+              key={i}
+              className="grass-blade"
+              style={{
+                left: `${(i / 20) * 100 + Math.random() * 4}%`,
+                height: `${6 + Math.random() * 8}px`,
+                background: `oklch(${0.45 + Math.random() * 0.15} ${0.15 + Math.random() * 0.05} 140)`,
+                animationDelay: `${Math.random() * -4}s`,
+                width: `${3 + Math.random() * 3}px`,
+                bottom: 0,
+                position: 'absolute',
+                borderRadius: '2px 2px 0 0',
+                transformOrigin: 'bottom center',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Progress/Seek Bar — 3D enhanced */}
         <div
           ref={progressRef}
           className="relative h-1.5 hover:h-3 cursor-pointer group transition-all duration-150 w-full"
@@ -291,24 +313,30 @@ export function MusicPlayer() {
           onTouchStart={handleSeekTouchStart}
         >
           {/* Background track */}
-          <div className="absolute inset-0 bg-muted/60" />
+          <div className="absolute inset-0 bg-muted/60 rounded-full" />
 
-          {/* Buffer progress — visible for both audio and youtube modes */}
+          {/* Buffer progress */}
           <div
-            className="absolute h-full bg-muted-foreground/25 transition-all duration-300 rounded-r-full"
+            className="absolute h-full bg-muted-foreground/20 transition-all duration-300 rounded-full"
             style={{ width: `${bufferProgress * 100}%` }}
           />
 
-          {/* Played progress */}
+          {/* Played progress — gradient glow */}
           <div
-            className="absolute h-full bg-orange-500 transition-[width] duration-100 rounded-r-full"
-            style={{ width: `${progressPercent}%` }}
+            className="absolute h-full bg-gradient-to-r from-orange-600 to-orange-400 transition-[width] duration-100 rounded-full"
+            style={{
+              width: `${progressPercent}%`,
+              boxShadow: '0 0 8px oklch(0.65 0.2 55 / 0.5)',
+            }}
           />
 
-          {/* Seek thumb — always visible on hover/drag, larger touch target */}
+          {/* Seek thumb — 3D styled */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 size-4 bg-orange-500 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ring-2 ring-white dark:ring-gray-900"
-            style={{ left: `calc(${progressPercent}% - 8px)` }}
+            className="absolute top-1/2 -translate-y-1/2 size-4 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none ring-2 ring-white dark:ring-gray-900"
+            style={{
+              left: `calc(${progressPercent}% - 8px)`,
+              boxShadow: '0 2px 8px oklch(0.65 0.2 55 / 0.5), 0 0 0 2px white',
+            }}
           />
 
           {/* Hover position indicator line */}
@@ -322,7 +350,7 @@ export function MusicPlayer() {
           {/* Hover time preview tooltip */}
           {seekHoverTime !== null && (
             <div
-              className="absolute -top-9 bg-black/85 text-white text-[11px] px-2 py-1 rounded-md transform -translate-x-1/2 pointer-events-none z-10 font-medium tabular-nums shadow-lg"
+              className="absolute -top-9 bg-black/85 text-white text-[11px] px-2 py-1 rounded-lg transform -translate-x-1/2 pointer-events-none z-10 font-medium tabular-nums shadow-xl border border-white/10"
               style={{ left: `${seekHoverX}px` }}
             >
               {formatTime(seekHoverTime)}
@@ -330,30 +358,31 @@ export function MusicPlayer() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-2 md:px-4 md:gap-4 h-[72px]">
-          {/* Track Info */}
-          <div className="flex items-center gap-2 min-w-0 flex-1 md:flex-none md:w-72">
-            <div className="relative size-12 rounded-lg overflow-hidden shrink-0">
+        <div className="flex items-center gap-2 px-3 py-2 md:px-6 md:gap-4 h-[76px]">
+          {/* Track Info — 3D Album Art */}
+          <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-80">
+            {/* 3D Thumbnail */}
+            <div className="player-thumb-3d size-14 shrink-0">
               <Image
                 src={currentTrack.thumbnail || '/weedmusic-logo.png'}
                 alt={currentTrack.title}
                 fill
-                className="object-cover"
+                className="object-cover rounded-xl"
                 unoptimized
               />
               {showLoading && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl">
                   <Loader2 className="size-4 text-orange-500 animate-spin" />
                 </div>
               )}
               {audioError && (
-                <div className="absolute inset-0 bg-red-500/30 flex items-center justify-center">
+                <div className="absolute inset-0 bg-red-500/30 flex items-center justify-center rounded-xl">
                   <AlertCircle className="size-4 text-white" />
                 </div>
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium truncate">{currentTrack.title}</p>
+              <p className="text-sm font-semibold truncate leading-tight">{currentTrack.title}</p>
               <button
                 onClick={handleArtistClick}
                 className="text-xs text-muted-foreground truncate hover:text-orange-500 transition-colors text-left"
@@ -361,15 +390,17 @@ export function MusicPlayer() {
                 {currentTrack.artist}
               </button>
             </div>
+            {/* Weed leaf decoration next to title */}
+            <span className="weed-leaf hidden md:inline text-green-500/30 text-sm">🌿</span>
           </div>
 
-          {/* Controls */}
+          {/* Controls — 3D styled */}
           <div className="flex items-center justify-center gap-1 md:gap-2 flex-1">
             <Button
               onClick={toggleShuffle}
               variant="ghost"
               size="icon"
-              className={`hidden md:flex size-8 ${shuffle ? 'text-orange-500' : 'text-muted-foreground'}`}
+              className={`hidden md:flex size-9 ctrl-btn-3d ${shuffle ? 'active' : 'text-muted-foreground'}`}
             >
               <Shuffle className="size-4" />
             </Button>
@@ -378,15 +409,15 @@ export function MusicPlayer() {
               onClick={prevTrack}
               variant="ghost"
               size="icon"
-              className="size-9 hover:bg-accent transition-colors"
+              className="size-10 ctrl-btn-3d text-foreground"
             >
-              <SkipBack className="size-4" />
+              <SkipBack className="size-5" />
             </Button>
 
             {audioError ? (
               <Button
                 onClick={handleRetry}
-                className="size-10 rounded-full bg-red-500 hover:bg-red-600 text-white"
+                className="size-12 rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30"
                 title="Retry playback"
               >
                 <AlertCircle className="size-5" />
@@ -394,7 +425,7 @@ export function MusicPlayer() {
             ) : (
               <Button
                 onClick={togglePlay}
-                className="size-10 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-md hover:shadow-lg transition-shadow"
+                className="play-btn-3d-player size-12 text-white flex items-center justify-center"
               >
                 {isPlaying && !showLoading ? (
                   <Pause className="size-5" />
@@ -410,16 +441,16 @@ export function MusicPlayer() {
               onClick={nextTrack}
               variant="ghost"
               size="icon"
-              className="size-9 hover:bg-accent transition-colors"
+              className="size-10 ctrl-btn-3d text-foreground"
             >
-              <SkipForward className="size-4" />
+              <SkipForward className="size-5" />
             </Button>
 
             <Button
               onClick={toggleRepeat}
               variant="ghost"
               size="icon"
-              className={`hidden md:flex size-8 ${repeat !== 'none' ? 'text-orange-500' : 'text-muted-foreground'}`}
+              className={`hidden md:flex size-9 ctrl-btn-3d ${repeat !== 'none' ? 'active' : 'text-muted-foreground'}`}
             >
               {repeat === 'one' ? <Repeat1 className="size-4" /> : <Repeat className="size-4" />}
             </Button>
@@ -432,13 +463,13 @@ export function MusicPlayer() {
               onClick={toggleAutoPlay}
               variant="ghost"
               size="sm"
-              className={`h-7 text-[10px] px-2 font-semibold tracking-wide ${autoPlay ? 'text-orange-500' : 'text-muted-foreground'}`}
+              className={`h-7 text-[10px] px-2 font-semibold tracking-wide rounded-full ${autoPlay ? 'text-orange-500 bg-orange-500/10' : 'text-muted-foreground'}`}
               title={autoPlay ? 'Auto-play ON' : 'Auto-play OFF'}
             >
               {autoPlay ? 'AUTO' : 'MANUAL'}
             </Button>
 
-            <span className="text-xs text-muted-foreground whitespace-nowrap tabular-nums">
+            <span className="text-xs text-muted-foreground whitespace-nowrap tabular-nums font-mono">
               {formatTime(isDragging ? dragTime : currentTime)} / {formatTime(duration)}
             </span>
 
@@ -447,7 +478,7 @@ export function MusicPlayer() {
                 onClick={() => setVolume(volume === 0 ? 0.8 : 0)}
                 variant="ghost"
                 size="icon"
-                className="size-7"
+                className="size-7 ctrl-btn-3d"
               >
                 {volume === 0 ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
               </Button>
@@ -465,7 +496,7 @@ export function MusicPlayer() {
               onClick={handleFavorite}
               variant="ghost"
               size="icon"
-              className={`size-8 ${isFav ? 'text-orange-500' : 'text-muted-foreground'}`}
+              className={`size-9 ctrl-btn-3d ${isFav ? 'active' : 'text-muted-foreground'}`}
             >
               <Heart className={`size-4 ${isFav ? 'fill-orange-500' : ''}`} />
             </Button>
@@ -474,7 +505,7 @@ export function MusicPlayer() {
               onClick={handleVideoPlay}
               variant="ghost"
               size="icon"
-              className="size-8 text-muted-foreground"
+              className="size-9 ctrl-btn-3d text-muted-foreground"
             >
               <Video className="size-4" />
             </Button>
@@ -483,7 +514,7 @@ export function MusicPlayer() {
               onClick={() => useMusicStore.getState().setView('car')}
               variant="ghost"
               size="icon"
-              className="size-8 text-muted-foreground"
+              className="size-9 ctrl-btn-3d text-muted-foreground"
             >
               <Car className="size-4" />
             </Button>
@@ -492,7 +523,7 @@ export function MusicPlayer() {
               onClick={() => setShowQueue(true)}
               variant="ghost"
               size="icon"
-              className="size-8 text-muted-foreground"
+              className="size-9 ctrl-btn-3d text-muted-foreground"
             >
               <ListMusic className="size-4" />
             </Button>
@@ -504,7 +535,7 @@ export function MusicPlayer() {
               onClick={handleFavorite}
               variant="ghost"
               size="icon"
-              className={`size-8 ${isFav ? 'text-orange-500' : 'text-muted-foreground'}`}
+              className={`size-9 ctrl-btn-3d ${isFav ? 'active' : 'text-muted-foreground'}`}
             >
               <Heart className={`size-4 ${isFav ? 'fill-orange-500' : ''}`} />
             </Button>
@@ -512,7 +543,7 @@ export function MusicPlayer() {
               onClick={handleVideoPlay}
               variant="ghost"
               size="icon"
-              className="size-8 text-muted-foreground"
+              className="size-9 ctrl-btn-3d text-muted-foreground"
             >
               <Video className="size-4" />
             </Button>
@@ -520,7 +551,7 @@ export function MusicPlayer() {
               onClick={() => setShowQueue(true)}
               variant="ghost"
               size="icon"
-              className="size-8 text-muted-foreground"
+              className="size-9 ctrl-btn-3d text-muted-foreground"
             >
               <ListMusic className="size-4" />
             </Button>

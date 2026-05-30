@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const PIPED_INSTANCES = [
   'https://pipedapi.kavin.rocks',
@@ -12,33 +12,56 @@ const KIDS_SEARCH_TERMS = [
   'disney songs for kids', 'cartoon songs', 'kids dance music'
 ];
 
+// Category-specific search terms
+const CATEGORY_TERMS: Record<string, string[]> = {
+  nursery: ['nursery rhymes', 'classic nursery songs', 'rhymes for kids'],
+  lullaby: ['lullaby songs kids', 'bedtime music kids', 'sleep songs children'],
+  action: ['action songs kids dance', 'movement songs children', 'dance along kids'],
+  animal: ['animal songs kids', 'animal sounds songs', 'zoo songs children'],
+  abc: ['abc songs kids learning', 'numbers songs children', 'educational songs preschool'],
+  fun: ['fun kids songs play', 'party songs children', 'happy kids music'],
+};
+
 // Explicit content filter keywords
 const BLOCKED_WORDS = [
   'explicit', 'nsfw', '18+', 'adult', 'xxx', 'sexy', 'naked', 'nude',
-  'violence', 'drug', 'alcohol', 'weed', 'smoke', 'gun', 'kill',
+  'violence', 'drug', 'alcohol', 'smoke', 'gun', 'kill',
   'fight', 'blood', 'death', 'murder', 'curse', 'swear', 'damn',
   'hell', 'crap', 'ass', 'bad word', 'inappropriate', 'mature'
 ];
 
 let cachedKids: any[] = [];
 let cacheTimestamp = 0;
-const CACHE_TTL = 30 * 60 * 1000;
+let cachedCategory = '';
+const CACHE_TTL = 10 * 60 * 1000; // 10 min cache
 
 function isKidSafe(title: string, artist: string): boolean {
   const combined = (title + ' ' + artist).toLowerCase();
   return !BLOCKED_WORDS.some(word => combined.includes(word));
 }
 
-export async function GET() {
-  if (cachedKids.length > 0 && Date.now() - cacheTimestamp < CACHE_TTL) {
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const customQuery = searchParams.get('q');
+  const category = searchParams.get('category') || '';
+
+  // Check cache for this category
+  if (cachedKids.length > 0 && Date.now() - cacheTimestamp < CACHE_TTL && cachedCategory === category) {
     return NextResponse.json({ items: cachedKids });
   }
 
   const allItems: any[] = [];
-  
-  // Search for kids content using multiple terms
-  const searchTerms = KIDS_SEARCH_TERMS.slice(0, 4);
-  
+
+  // Determine search terms
+  let searchTerms: string[];
+  if (customQuery) {
+    searchTerms = [customQuery];
+  } else if (category && CATEGORY_TERMS[category]) {
+    searchTerms = CATEGORY_TERMS[category];
+  } else {
+    searchTerms = KIDS_SEARCH_TERMS.slice(0, 4);
+  }
+
   for (const term of searchTerms) {
     for (const instance of PIPED_INSTANCES) {
       try {
@@ -81,6 +104,7 @@ export async function GET() {
 
   cachedKids = items;
   cacheTimestamp = Date.now();
+  cachedCategory = category;
 
   return NextResponse.json({ items });
 }

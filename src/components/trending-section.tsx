@@ -32,6 +32,8 @@ export function TrendingSection() {
     <section className="px-4 md:px-6 py-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
+          <span className="text-lg">🌿</span>
+          <span className="text-lg">🌿</span>
           <TrendingUp className="size-5 text-orange-500" />
           <h2 className="text-xl font-bold">Trending Now</h2>
         </div>
@@ -47,7 +49,7 @@ export function TrendingSection() {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
           {Array.from({ length: 10 }).map((_, i) => (
             <div key={i}>
               <Skeleton className="aspect-square w-full rounded-xl" />
@@ -62,7 +64,7 @@ export function TrendingSection() {
           <p className="text-sm mt-1">Check back later!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8 gap-4">
           {tracks.map((track) => (
             <TrackCard key={track.videoId} track={track} variant="grid" />
           ))}

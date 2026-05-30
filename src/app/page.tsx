@@ -26,6 +26,8 @@ import { TvChannels } from '@/components/tv-channels';
 export default function Home() {
   const view = useMusicStore((s) => s.view);
   const showVideoPlayer = useMusicStore((s) => s.showVideoPlayer);
+  const sidebarOpen = useMusicStore((s) => s.sidebarOpen);
+  const setSidebarOpen = useMusicStore((s) => s.setSidebarOpen);
 
   // Full-screen modes
   if (view === 'car') {
@@ -48,15 +50,45 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background relative overflow-hidden">
       <AudioManager />
       <PWARegister />
 
-      {/* Desktop Sidebar */}
+      {/* Weed Grass Background Decorations */}
+      <div className="fixed bottom-0 left-0 right-0 z-10 pointer-events-none overflow-hidden">
+        <div className="flex justify-around items-end h-8 opacity-30">
+          <span className="text-2xl animate-grass-sway" style={{animationDelay: '0s'}}>🌿</span>
+          <span className="text-xl animate-grass-sway" style={{animationDelay: '0.5s'}}>🌱</span>
+          <span className="text-2xl animate-grass-sway" style={{animationDelay: '1s'}}>🌾</span>
+          <span className="text-xl animate-grass-sway" style={{animationDelay: '1.5s'}}>🍃</span>
+          <span className="text-2xl animate-grass-sway" style={{animationDelay: '2s'}}>🌿</span>
+          <span className="text-xl animate-grass-sway" style={{animationDelay: '0.3s'}}>🌱</span>
+          <span className="text-2xl animate-grass-sway" style={{animationDelay: '0.8s'}}>🌾</span>
+          <span className="text-xl animate-grass-sway" style={{animationDelay: '1.3s'}}>🍃</span>
+        </div>
+      </div>
+
+      {/* Floating Weed Particles */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <span className="absolute left-[10%] top-[20%] text-3xl animate-weed-float opacity-20" style={{animationDelay: '0s'}}>🌿</span>
+        <span className="absolute left-[80%] top-[60%] text-2xl animate-weed-float opacity-15" style={{animationDelay: '2s'}}>🍃</span>
+        <span className="absolute left-[50%] top-[40%] text-xl animate-weed-float opacity-10" style={{animationDelay: '4s'}}>🌱</span>
+        <span className="absolute left-[30%] top-[70%] text-2xl animate-weed-float opacity-15" style={{animationDelay: '3s'}}>🌾</span>
+      </div>
+
+      {/* Collapsible Sidebar */}
       <AppSidebar />
 
-      {/* Main Content Area - offset on desktop for sidebar */}
-      <div className="flex-1 lg:ml-60">
+      {/* Sidebar Backdrop (mobile) */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Main Content - Full Width */}
+      <div className="flex-1 content-fullscreen">
         <Header />
 
         <main className="flex-1 pb-36 md:pb-24">

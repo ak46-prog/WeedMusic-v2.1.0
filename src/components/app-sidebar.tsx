@@ -335,21 +335,61 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 /* ------------------------------------------------------------------ */
 
 export function AppSidebar() {
+  const { sidebarOpen, setSidebarOpen } = useMusicStore();
+
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-60 bg-background border-r z-30 flex-col">
+      {/* Desktop sidebar - always visible on lg+ */}
+      <aside className="hidden lg:flex fixed left-0 top-0 bottom-0 w-60 bg-background border-r z-30 flex-col grass-border-top">
+        {/* Logo header */}
+        <div className="px-4 pt-4 pb-2 border-b">
+          <h2 className="text-base font-bold bg-gradient-to-r from-green-600 via-orange-500 to-green-600 bg-clip-text text-transparent flex items-center gap-1.5">
+            🌿 WeedMusic
+          </h2>
+        </div>
         <SidebarContent />
       </aside>
 
-      {/* Mobile sheet sidebar */}
-      <MobileSidebarSheet />
+      {/* Mobile overlay sidebar */}
+      <div className="lg:hidden">
+        {/* Backdrop overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Sidebar panel */}
+        <aside
+          className={cn(
+            'fixed left-0 top-0 bottom-0 w-72 bg-background border-r z-50 flex flex-col grass-border-top transition-transform duration-300 ease-in-out',
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          )}
+        >
+          {/* Close button */}
+          <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b">
+            <h2 className="text-base font-bold bg-gradient-to-r from-green-600 via-orange-500 to-green-600 bg-clip-text text-transparent flex items-center gap-1.5">
+              🌿 WeedMusic
+            </h2>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-1.5 rounded-md hover:bg-accent/50 transition-colors"
+              aria-label="Close sidebar"
+            >
+              <X className="size-4 text-muted-foreground" />
+            </button>
+          </div>
+          <SidebarContent onNavigate={() => setSidebarOpen(false)} />
+        </aside>
+      </div>
     </>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/*  Mobile sheet sidebar                                               */
+/*  Mobile sheet sidebar (kept for backwards compat if needed)         */
 /* ------------------------------------------------------------------ */
 
 function MobileSidebarSheet() {
@@ -360,7 +400,7 @@ function MobileSidebarSheet() {
       <SheetContent side="left" className="w-72 p-0">
         <SheetHeader className="px-4 pt-4 pb-2">
           <SheetTitle className="text-left text-base font-bold bg-gradient-to-r from-green-600 via-orange-500 to-green-600 bg-clip-text text-transparent">
-            WeedMusic
+            🌿 WeedMusic
           </SheetTitle>
         </SheetHeader>
         <SidebarContent onNavigate={() => setSidebarOpen(false)} />

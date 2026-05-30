@@ -42,6 +42,17 @@ export function HeroBanner() {
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/40 to-transparent" />
 
+      {/* Floating weed leaf decorations */}
+      <div className="absolute top-8 right-12 text-3xl md:text-4xl opacity-40 animate-bounce" style={{ animationDuration: '3s', animationDelay: '0s' }}>
+        🌿
+      </div>
+      <div className="absolute top-20 right-36 text-2xl md:text-3xl opacity-30 animate-bounce" style={{ animationDuration: '4s', animationDelay: '1s' }}>
+        🌿
+      </div>
+      <div className="absolute top-14 right-56 text-xl md:text-2xl opacity-25 animate-bounce" style={{ animationDuration: '3.5s', animationDelay: '0.5s' }}>
+        🌿
+      </div>
+
       {/* Content */}
       <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 pb-8">
         <div className="max-w-2xl">
@@ -71,6 +82,20 @@ export function HeroBanner() {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Grass patches at the bottom */}
+      <div className="absolute bottom-0 left-0 right-0 flex items-end justify-around pointer-events-none overflow-hidden">
+        <span className="text-2xl md:text-3xl animate-pulse" style={{ animationDuration: '2s', animationDelay: '0s' }}>🌿</span>
+        <span className="text-xl md:text-2xl animate-pulse" style={{ animationDuration: '2.5s', animationDelay: '0.3s' }}>🌿</span>
+        <span className="text-2xl md:text-3xl animate-pulse" style={{ animationDuration: '2.2s', animationDelay: '0.6s' }}>🌿</span>
+        <span className="text-lg md:text-xl animate-pulse" style={{ animationDuration: '2.8s', animationDelay: '0.1s' }}>🌿</span>
+        <span className="text-2xl md:text-3xl animate-pulse" style={{ animationDuration: '2.3s', animationDelay: '0.4s' }}>🌿</span>
+        <span className="text-xl md:text-2xl animate-pulse" style={{ animationDuration: '2.6s', animationDelay: '0.7s' }}>🌿</span>
+        <span className="text-2xl md:text-3xl animate-pulse" style={{ animationDuration: '2.1s', animationDelay: '0.2s' }}>🌿</span>
+        <span className="text-lg md:text-xl animate-pulse" style={{ animationDuration: '2.7s', animationDelay: '0.5s' }}>🌿</span>
+        <span className="text-2xl md:text-3xl animate-pulse" style={{ animationDuration: '2.4s', animationDelay: '0.8s' }}>🌿</span>
+        <span className="text-xl md:text-2xl animate-pulse" style={{ animationDuration: '2.9s', animationDelay: '0.15s' }}>🌿</span>
       </div>
     </section>
   );

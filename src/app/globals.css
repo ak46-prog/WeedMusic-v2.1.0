@@ -1651,3 +1651,188 @@ html.theme-transitioning *::after {
     transform: none;
   }
 }
+
+/* ==========================================================================
+   3D IMMERSIVE DESIGN — Floating Cards, Category Orbs, Audio Visualizer
+   Inspired by Deri-Kurniawan/3d-portfolio Framer Motion + R3F integration
+   Purple→Cyan gradient theme with GPU-only animations
+   ========================================================================== */
+
+/* ---- 3D Gradient Text ---- */
+.text-gradient-3d {
+  background: linear-gradient(135deg, #a293ff, #00f0ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.gradient-text-3d {
+  background: linear-gradient(135deg, #a293ff, #00f0ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ---- Floating 3D Track Card ---- */
+.floating-3d-card {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  will-change: transform;
+  transform-style: preserve-3d;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.floating-3d-card:hover {
+  border-color: rgba(162, 147, 255, 0.3);
+  box-shadow: 0 12px 40px -8px rgba(162, 147, 255, 0.15),
+              0 0 0 1px rgba(162, 147, 255, 0.1);
+}
+.floating-3d-card.is-playing-3d {
+  border-color: #a293ff;
+  box-shadow: 0 0 0 1px #a293ff,
+              0 8px 32px -4px rgba(162, 147, 255, 0.2);
+}
+
+/* ---- Floating 3D Card Thumbnail ---- */
+.floating-3d-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--muted);
+}
+.floating-3d-thumb img {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.floating-3d-card:hover .floating-3d-thumb img {
+  transform: scale(1.08);
+}
+
+/* ---- Floating 3D Overlay ---- */
+.floating-3d-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  backdrop-filter: blur(2px);
+}
+.floating-3d-card:hover .floating-3d-overlay {
+  opacity: 1;
+}
+
+/* ---- Category 3D Card V2 ---- */
+.category-3d-card-v2 {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  border-radius: 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  min-height: 140px;
+  will-change: transform;
+  transform-style: preserve-3d;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.category-3d-card-v2:hover {
+  border-color: rgba(162, 147, 255, 0.25);
+  box-shadow: 0 8px 30px -6px rgba(162, 147, 255, 0.12),
+              0 0 0 1px rgba(162, 147, 255, 0.08);
+}
+
+/* ---- Category 3D Shape Container ---- */
+.category-3d-shape {
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.category-3d-card-v2:hover .category-3d-shape {
+  opacity: 0.55;
+}
+
+/* ---- Category 3D Content V2 ---- */
+.category-3d-content-v2 {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+}
+
+/* ---- Category 3D Glow V2 ---- */
+.category-3d-glow-v2 {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 20px;
+}
+
+/* ---- Hero 3D Container ---- */
+.hero-3d-container {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---- Hero 3D Content ---- */
+.hero-3d-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- Hero Ambient Shroud 3D ---- */
+.hero-ambient-shroud-3d {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom,
+    oklch(0.145 0 0 / 0.05) 0%,
+    oklch(0.145 0 0 / 0.4) 50%,
+    var(--background) 100%
+  );
+  pointer-events: none;
+}
+:root:not(.dark) .hero-ambient-shroud-3d {
+  background: linear-gradient(to bottom,
+    oklch(1 0 0 / 0.05) 0%,
+    oklch(1 0 0 / 0.4) 50%,
+    var(--background) 100%
+  );
+}
+
+/* ---- Premium Hero Media V2 ---- */
+.premium-hero-media-v2 {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: contrast(1.02) brightness(0.9) saturate(1.1);
+  will-change: transform;
+  transform: translateZ(0);
+  animation: premiumCinematicDrift 40s cubic-bezier(0.25, 1, 0.5, 1) infinite alternate;
+}
+
+/* ---- 3D Section Divider ---- */
+.section-divider-3d {
+  height: 1px;
+  background: linear-gradient(to right,
+    transparent,
+    rgba(162, 147, 255, 0.3),
+    rgba(0, 240, 255, 0.2),
+    rgba(162, 147, 255, 0.3),
+    transparent
+  );
+  margin: 0 auto;
+  max-width: 600px;
+}

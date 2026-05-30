@@ -3,6 +3,7 @@
 import { useState, lazy, Suspense } from 'react';
 import Image from 'next/image';
 import { Play, Shuffle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useMusicStore, type Track } from '@/lib/store';
 
@@ -64,16 +65,34 @@ export function HeroBanner() {
       {/* Side gradient for text readability */}
       <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/50 to-transparent pointer-events-none" />
 
-      {/* Content */}
+      {/* Content with Framer Motion entrance (inspired by 3D-portfolio hero) */}
       <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 pb-8" style={{ paddingInline: 'var(--fluid-padding)' }}>
         <div className="max-w-2xl hero-3d-content">
-          <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2 flex items-center gap-3" style={{ fontSize: 'var(--font-size-heading)' }}>
+          <motion.h1
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+            className="text-3xl md:text-5xl font-bold text-foreground mb-2 flex items-center gap-3"
+            style={{ fontSize: 'var(--font-size-heading)' }}
+          >
             Welcome to <span className="gradient-text-3d">WeedMusic</span>
-          </h1>
-          <p className="text-muted-foreground text-sm md:text-lg mb-6 max-w-lg">
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            className="text-muted-foreground text-sm md:text-lg mb-6 max-w-lg"
+          >
             Stream unlimited music ad-free. YouTube, Radio, Kids &amp; more platforms.
-          </p>
-          <div className="flex gap-3">
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="flex gap-3"
+          >
             <Button
               onClick={handlePlayNow}
               size="lg"
@@ -91,7 +110,7 @@ export function HeroBanner() {
               <Shuffle className="size-5" />
               Explore
             </Button>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

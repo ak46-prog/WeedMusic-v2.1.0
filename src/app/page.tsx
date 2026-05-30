@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { useMusicStore } from '@/lib/store';
 import { Header } from '@/components/header';
 import { HeroBanner } from '@/components/hero-banner';
-import { TrendingSection } from '@/components/trending-section';
-import { CategorySection } from '@/components/category-section';
+import { Trending3DSection } from '@/components/trending-3d';
 import { Category3DSection } from '@/components/3d-categories';
 import { PromoBanner } from '@/components/promo-banner';
 import { SearchView } from '@/components/search-view';
@@ -93,9 +92,8 @@ export default function Home() {
             <>
               <HeroBanner />
               <PromoBanner />
-              <TrendingSection />
+              <Trending3DSection />
               <Category3DSection />
-              <CategorySection />
               <TvChannels />
             </>
           )}

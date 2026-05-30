@@ -1,95 +1,18 @@
 'use client';
 
-import { useState, useEffect, useSyncExternalStore, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Search, Baby, Car, Menu, Clock, Sun, Moon, Monitor } from 'lucide-react';
+import { Search, Baby, Car, Menu, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useMusicStore } from '@/lib/store';
-import { useTheme } from 'next-themes';
 import { QualitySettings } from '@/components/quality-settings';
 import { VoiceSearchButton } from '@/components/voice-search';
 import { AuthButton } from '@/components/auth-button';
 import { ThemeSelector } from '@/components/theme-selector';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
-// Hydration-safe mount detection
-const emptySubscribe = () => () => {};
-function useHasMounted() {
-  return useSyncExternalStore(
-    emptySubscribe,
-    () => true,
-    () => false,
-  );
-}
 
-function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const mounted = useHasMounted();
-
-  if (!mounted) {
-    return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-9 text-muted-foreground"
-        aria-label="Toggle theme"
-      >
-        <Sun className="size-[18px]" />
-      </Button>
-    );
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-9 text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200"
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? (
-            <Moon className="size-[18px] text-orange-500" />
-          ) : theme === 'light' ? (
-            <Sun className="size-[18px] text-orange-500" />
-          ) : (
-            <Monitor className="size-[18px] text-orange-500" />
-          )}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-36">
-        <DropdownMenuItem
-          onClick={() => setTheme('light')}
-          className={theme === 'light' ? 'bg-accent text-orange-500 font-medium' : ''}
-        >
-          <Sun className="size-4 mr-2" />
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme('dark')}
-          className={theme === 'dark' ? 'bg-accent text-orange-500 font-medium' : ''}
-        >
-          <Moon className="size-4 mr-2" />
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme('system')}
-          className={theme === 'system' ? 'bg-accent text-orange-500 font-medium' : ''}
-        >
-          <Monitor className="size-4 mr-2" />
-          System
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
 
 export function Header() {
   const childMode = useMusicStore((s) => s.childMode);
@@ -226,9 +149,6 @@ export function Header() {
 
           {/* Color Palette — auto festival detection */}
           <ThemeSelector />
-
-          {/* Dark/Light/System toggle */}
-          <ThemeToggle />
 
           <Button
             variant="ghost"

@@ -224,7 +224,7 @@ export function Header() {
 
           <QualitySettings />
 
-          {/* Color Palette & Festival Selector */}
+          {/* Color Palette — auto festival detection */}
           <ThemeSelector />
 
           {/* Dark/Light/System toggle */}

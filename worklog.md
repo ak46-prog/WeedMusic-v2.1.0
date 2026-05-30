@@ -34,3 +34,23 @@ Stage Summary:
   - Floating trigger button (bottom-right)
   - No login required
 - API tested: Returns music-focused AI responses successfully
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Publish WeedMusic — strip heavy 3D + fix trending
+
+Work Log:
+- Checked git status: local branch had 3 UUID commits ahead of origin, remote had 1e8931a (lightweight 3D system)
+- Remote already replaced heavy WebGL with CSS/Framer Motion but still had ~100+ infinite animations
+- Reset to origin/main (clean base)
+- Stripped all heavy 3D animations from scene-3d.tsx — HeroScene3D, CategoryScene3D, ThumbnailScene3D now return null (zero GPU cost)
+- Updated InnerTube clientVersion from 1.20241210.00.00 → 1.20250525.00.00 in both trending and search routes (fixes trending tracks)
+- Build verified clean (no errors)
+- Committed and pushed to origin/main: f75acfd
+
+Stage Summary:
+- 346 lines removed, 19 added (net -327 lines)
+- All heavy 3D animations stripped (particles, EQ bars, floating shapes, sparkles)
+- InnerTube trending fix applied
+- Vercel deployment triggered via GitHub push

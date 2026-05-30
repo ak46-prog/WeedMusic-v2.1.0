@@ -665,11 +665,28 @@ export function AudioManager() {
     <>
       <audio ref={audioRef} preload="auto" />
       <div
-        ref={ytContainerRef}
-        className="fixed w-px h-px overflow-hidden opacity-0 pointer-events-none"
-        style={{ top: '-100px', left: '-100px' }}
+        style={{
+          position: 'fixed',
+          top: '-9999px',
+          left: '-9999px',
+          width: '1px',
+          height: '1px',
+          overflow: 'hidden',
+          opacity: 0,
+          pointerEvents: 'none',
+          zIndex: -9999,
+        }}
         aria-hidden="true"
-      />
+      >
+        <div
+          ref={ytContainerRef}
+          style={{
+            width: '1px',
+            height: '1px',
+            overflow: 'hidden',
+          }}
+        />
+      </div>
     </>
   );
 }

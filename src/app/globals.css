@@ -182,6 +182,22 @@ audio {
   display: none;
 }
 
+/* ---- Force-hide YouTube IFrame player (audio-only mode) ---- */
+/* Prevents the "square box" showing when song stops */
+iframe[id^="yt-player-"] {
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  border: none !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  clip-path: inset(50%) !important;
+}
+
 /* ---- Smooth transitions ---- */
 * {
   scroll-behavior: smooth;

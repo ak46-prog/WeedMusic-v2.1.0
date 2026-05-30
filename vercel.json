@@ -1,0 +1,10 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "bun run build",
+  "installCommand": "bun install",
+  "devCommand": "bun run dev",
+  "regions": ["iad1"],
+  "env": {
+    "DATABASE_URL": "file:./prod.db"
+  }
+}

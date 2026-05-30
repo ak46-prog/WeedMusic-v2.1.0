@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Track {
+  id          String   @id @default(cuid())
+  videoId     String   @unique  // YouTube video ID
+  title       String
+  artist      String   @default("Unknown")
+  thumbnail   String   @default("")
+  duration    Int      @default(0)  // seconds
+  isPaid      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  favorites   Favorite[]
+  history     History[]
+  playlistItems PlaylistItem[]
+}
+
+model Playlist {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @default("")
+  coverImage  String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  items       PlaylistItem[]
+}
+
+model PlaylistItem {
+  id         String   @id @default(cuid())
+  playlistId String
+  trackId    String
+  position   Int      @default(0)
+  createdAt  DateTime @default(now())
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  track      Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  
+  @@unique([playlistId, trackId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  trackId   String
+  createdAt DateTime @default(now())
+  track     Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  
+  @@unique([trackId])
+}
+
+model History {
+  id        String   @id @default(cuid())
+  trackId   String
+  playedAt  DateTime @default(now())
+  track     Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+}

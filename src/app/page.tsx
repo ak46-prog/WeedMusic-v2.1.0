@@ -23,6 +23,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { Github, Play, Globe, ExternalLink, Shield, Menu, Leaf } from 'lucide-react';
 import { PWARegister } from '@/components/pwa-register';
 import { TvChannels } from '@/components/tv-channels';
+import { VoiceAssistant } from '@/components/voice-assistant';
 import { Button } from '@/components/ui/button';
 
 
@@ -38,6 +39,7 @@ export default function Home() {
       <div className="min-h-screen flex flex-col bg-background">
         <AudioManager />
         <CarMode />
+        <VoiceAssistant />
       </div>
     );
   }
@@ -48,6 +50,7 @@ export default function Home() {
         <AudioManager />
         <KidsMode />
         <MusicPlayer />
+        <VoiceAssistant />
       </div>
     );
   }
@@ -143,6 +146,7 @@ export default function Home() {
       <MobileNav />
       <MusicPlayer />
       {showVideoPlayer && <VideoPlayer />}
+      <VoiceAssistant />
     </div>
   );
 }

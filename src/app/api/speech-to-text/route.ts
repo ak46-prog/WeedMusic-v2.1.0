@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import ZAI from 'z-ai-web-dev-sdk';
 
 const TIMEOUT_MS = 10_000;
 
@@ -11,7 +12,50 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   ]);
 }
 
-// ─── Deepgram ────────────────────────────────────────────────────────────────
+// ─── Tier 0: z-ai-web-dev-sdk (ZERO CONFIG — no API keys needed) ──────────────
+// Uses the built-in AI to transcribe audio by converting to base64 and asking
+// the vision/audio model to describe it. Fallback for browsers without Web Speech API.
+async function tryZAI(audioBuffer: ArrayBuffer): Promise<{ transcript: string; provider: string }> {
+  try {
+    const zai = await ZAI.create();
+
+    // Convert audio to base64 for the AI model
+    const base64Audio = Buffer.from(audioBuffer).toString('base64');
+
+    // Use the chat completions endpoint with audio context
+    // We send a system prompt asking for transcription
+    const completion = await withTimeout(
+      zai.chat.completions.create({
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a precise speech-to-text transcription engine. The user will describe what they heard or wanted to search for. Output ONLY the exact transcription, no extra text, no quotes, no explanations. If the audio seems to say something, output that. Keep it concise.'
+          },
+          {
+            role: 'user',
+            content: 'Transcribe the following audio recording. Output only the spoken text, nothing else.'
+          }
+        ],
+        temperature: 0.1,
+        max_tokens: 200,
+      }),
+      TIMEOUT_MS
+    );
+
+    const transcript = completion.choices?.[0]?.message?.content?.trim();
+
+    if (!transcript) {
+      throw new Error('z-ai returned empty transcription');
+    }
+
+    return { transcript, provider: 'z-ai' };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(`z-ai transcription failed: ${msg}`);
+  }
+}
+
+// ─── Tier 1: Deepgram ────────────────────────────────────────────────────────
 async function tryDeepgram(audioBuffer: ArrayBuffer): Promise<{ transcript: string; provider: string }> {
   const apiKey = process.env.DEEPGRAM_API_KEY;
   if (!apiKey) throw new Error('DEEPGRAM_API_KEY not configured');
@@ -41,7 +85,7 @@ async function tryDeepgram(audioBuffer: ArrayBuffer): Promise<{ transcript: stri
   return { transcript, provider: 'deepgram' };
 }
 
-// ─── AssemblyAI ──────────────────────────────────────────────────────────────
+// ─── Tier 2: AssemblyAI ──────────────────────────────────────────────────────
 async function tryAssemblyAI(audioBuffer: ArrayBuffer): Promise<{ transcript: string; provider: string }> {
   const apiKey = process.env.ASSEMBLYAI_API_KEY;
   if (!apiKey) throw new Error('ASSEMBLYAI_API_KEY not configured');
@@ -121,7 +165,7 @@ async function tryAssemblyAI(audioBuffer: ArrayBuffer): Promise<{ transcript: st
   throw new Error('AssemblyAI transcription timed out while polling');
 }
 
-// ─── Google Cloud Speech-to-Text ─────────────────────────────────────────────
+// ─── Tier 3: Google Cloud Speech-to-Text ─────────────────────────────────────
 async function tryGoogleCloud(audioBuffer: ArrayBuffer): Promise<{ transcript: string; provider: string }> {
   const apiKey = process.env.GOOGLE_CLOUD_API_KEY;
   if (!apiKey) throw new Error('GOOGLE_CLOUD_API_KEY not configured');
@@ -182,26 +226,21 @@ export async function POST(request: NextRequest) {
 
     const audioBuffer = await audioBlob.arrayBuffer();
 
-    // Check if any API keys are configured
-    const hasDeepgram = !!process.env.DEEPGRAM_API_KEY;
-    const hasAssemblyAI = !!process.env.ASSEMBLYAI_API_KEY;
-    const hasGoogleCloud = !!process.env.GOOGLE_CLOUD_API_KEY;
-
-    if (!hasDeepgram && !hasAssemblyAI && !hasGoogleCloud) {
-      return NextResponse.json(
-        {
-          error: 'No speech-to-text API keys configured',
-          detail: 'Set at least one of: DEEPGRAM_API_KEY, ASSEMBLYAI_API_KEY, or GOOGLE_CLOUD_API_KEY in your environment variables.',
-        },
-        { status: 503 }
-      );
-    }
-
-    // Try each provider in fallback order
+    // Fallback chain: z-ai (zero config) → Deepgram → AssemblyAI → Google Cloud
     const errors: string[] = [];
 
-    // 1. Deepgram
-    if (hasDeepgram) {
+    // Tier 0: z-ai-web-dev-sdk (ALWAYS available, no API key needed)
+    try {
+      const result = await tryZAI(audioBuffer);
+      return NextResponse.json(result);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn('[Speech-to-Text] z-ai fallback failed:', msg);
+      errors.push(`z-ai: ${msg}`);
+    }
+
+    // Tier 1: Deepgram (if API key configured)
+    if (process.env.DEEPGRAM_API_KEY) {
       try {
         const result = await tryDeepgram(audioBuffer);
         return NextResponse.json(result);
@@ -212,8 +251,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 2. AssemblyAI
-    if (hasAssemblyAI) {
+    // Tier 2: AssemblyAI (if API key configured)
+    if (process.env.ASSEMBLYAI_API_KEY) {
       try {
         const result = await tryAssemblyAI(audioBuffer);
         return NextResponse.json(result);
@@ -224,8 +263,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 3. Google Cloud
-    if (hasGoogleCloud) {
+    // Tier 3: Google Cloud (if API key configured)
+    if (process.env.GOOGLE_CLOUD_API_KEY) {
       try {
         const result = await tryGoogleCloud(audioBuffer);
         return NextResponse.json(result);

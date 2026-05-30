@@ -1668,3 +1668,29 @@ html.theme-transitioning *::after {
     animation: none;
   }
 }
+
+/* ---- Music Icon Fallback (neumorphic 3D button) ---- */
+@keyframes music-icon-heartbeat {
+  0%   { transform: scale(1); }
+  15%  { transform: scale(1.04); }
+  30%  { transform: scale(1); }
+  45%  { transform: scale(1.04); }
+  60%  { transform: scale(1); }
+  100% { transform: scale(1); }
+}
+
+.music-icon-fallback {
+  position: relative;
+}
+
+.music-icon-btn {
+  will-change: transform;
+  transform: translateZ(0);
+  animation: music-icon-heartbeat 2.5s infinite ease-in-out;
+  transition: background-color 0.5s ease, box-shadow 0.2s ease;
+}
+
+.music-icon-btn:active {
+  animation: none;
+  transform: scale(0.95);
+}

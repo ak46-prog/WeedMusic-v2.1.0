@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { SmartThumbnail } from '@/components/music-icon-fallback';
 import { Play, Pause, SkipBack, SkipForward, Volume2, X, Volume1, VolumeX, Shield, Car, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -110,12 +110,12 @@ export function CarMode() {
       <div className="flex-1 flex items-center justify-center px-8">
         <div className={`relative w-64 h-64 md:w-80 md:h-80 rounded-2xl overflow-hidden shadow-2xl transition-transform duration-500 ${isPlaying ? 'scale-100' : 'scale-95'}`}>
           {currentTrack ? (
-            <Image
-              src={currentTrack.thumbnail || '/weedmusic-logo.png'}
+            <SmartThumbnail
+              src={currentTrack.thumbnail}
               alt={currentTrack.title}
-              fill
-              className="object-cover"
-              unoptimized
+              videoId={currentTrack.videoId}
+              className="object-cover w-full h-full"
+              size="full"
             />
           ) : (
             <div className="w-full h-full bg-zinc-800 flex items-center justify-center">

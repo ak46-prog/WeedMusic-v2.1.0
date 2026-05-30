@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import Image from 'next/image';
+import { SmartThumbnail } from '@/components/music-icon-fallback';
 import { Baby, Play, Shield, ArrowLeft, RefreshCw, Music, Star, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -212,12 +212,12 @@ export function KidsMode() {
 
                   {/* Thumbnail */}
                   <div className="card-media-wrapper">
-                    <Image
-                      src={track.thumbnail || '/weedmusic-logo.png'}
+                    <SmartThumbnail
+                      src={track.thumbnail}
                       alt={track.title}
-                      fill
-                      className={`object-cover card-thumb transition-transform duration-500 group-hover:scale-110 ${isPlaying ? 'scale-105' : ''}`}
-                      unoptimized
+                      videoId={track.videoId}
+                      className={`object-cover w-full h-full card-thumb transition-transform duration-500 group-hover:scale-110 ${isPlaying ? 'scale-105' : ''}`}
+                      size="full"
                     />
 
                     {/* Play Overlay */}

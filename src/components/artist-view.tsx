@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
+import { SmartThumbnail } from '@/components/music-icon-fallback';
 import { ArrowLeft, Share2, Video, MoreHorizontal, Play, Pause, ListMusic, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -287,12 +288,12 @@ export function ArtistView() {
 
                   {/* Thumbnail */}
                   <div className="relative w-16 h-10 rounded overflow-hidden shrink-0">
-                    <Image
-                      src={track.thumbnail || '/zmusic-logo.png'}
+                    <SmartThumbnail
+                      src={track.thumbnail}
                       alt={track.title}
-                      fill
-                      className="object-cover"
-                      unoptimized
+                      videoId={track.videoId}
+                      className="object-cover w-full h-full"
+                      size="mini"
                     />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                       <Play className="size-4 text-white opacity-0 group-hover:opacity-100 transition-opacity fill-white" />

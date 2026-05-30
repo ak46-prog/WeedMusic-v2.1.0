@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
+import { SmartThumbnail } from '@/components/music-icon-fallback';
 import {
   Heart,
   Clock,
@@ -290,12 +290,12 @@ export function LibraryView() {
                   }`}
                 >
                   <div className="relative aspect-square w-full overflow-hidden">
-                    <Image
-                      src={track.thumbnail || '/weedmusic-logo.png'}
+                    <SmartThumbnail
+                      src={track.thumbnail}
                       alt={track.title}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-110"
-                      unoptimized
+                      videoId={track.videoId}
+                      className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-110"
+                      size="full"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                     {/* Play overlay */}
@@ -347,12 +347,12 @@ export function LibraryView() {
                 className="card-hover glass-card group rounded-xl overflow-hidden text-left transition-all"
               >
                 <div className="relative aspect-square w-full overflow-hidden">
-                  <Image
-                    src={track.thumbnail || '/weedmusic-logo.png'}
+                  <SmartThumbnail
+                    src={track.thumbnail}
                     alt={track.title}
-                    fill
-                    className="object-cover"
-                    unoptimized
+                    videoId={track.videoId}
+                    className="object-cover w-full h-full"
+                    size="full"
                   />
                 </div>
                 <div className="p-3">

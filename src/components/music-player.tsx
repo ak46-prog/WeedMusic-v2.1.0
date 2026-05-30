@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import Image from 'next/image';
+import { SmartThumbnail } from '@/components/music-icon-fallback';
 import {
   Play, Pause, SkipBack, SkipForward, Heart, Video,
   Car, ListMusic, Shuffle, Repeat, Repeat1, Volume2, VolumeX, AlertCircle, Loader2,
@@ -340,12 +340,12 @@ export function MusicPlayer() {
           <div className="flex items-center gap-3 min-w-0 flex-1 md:flex-none md:w-80">
             {/* Thumbnail */}
             <div className="player-thumb size-14 shrink-0">
-              <Image
-                src={currentTrack.thumbnail || '/weedmusic-logo.png'}
+              <SmartThumbnail
+                src={currentTrack.thumbnail}
                 alt={currentTrack.title}
-                fill
-                className="object-cover rounded-xl"
-                unoptimized
+                videoId={currentTrack.videoId}
+                className="object-cover w-full h-full rounded-xl"
+                size="mini"
               />
               {showLoading && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl">

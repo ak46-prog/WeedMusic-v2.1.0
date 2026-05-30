@@ -2,11 +2,11 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
-import Image from 'next/image';
 import { Play, Eye } from 'lucide-react';
 import { useMusicStore, type Track } from '@/lib/store';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDuration } from '@/lib/utils-music';
+import { SmartThumbnail } from '@/components/music-icon-fallback';
 
 /* ---- Format Views ---- */
 function formatViews(views: number): string {
@@ -51,14 +51,14 @@ function FloatingTrackCard({ track, index }: { track: Track; index: number }) {
       onClick={() => setTimeout(() => playTrack(track), 0)}
       className={`floating-3d-card group cursor-pointer ${isCurrent ? 'is-playing-3d' : ''}`}
     >
-      {/* Thumbnail */}
+      {/* Thumbnail with music icon fallback */}
       <div className="floating-3d-thumb">
-        <Image
-          src={track.thumbnail || '/weedmusic-logo.png'}
+        <SmartThumbnail
+          src={track.thumbnail}
           alt={track.title}
-          fill
-          className="object-cover"
-          unoptimized
+          videoId={track.videoId}
+          className="object-cover w-full h-full"
+          size="full"
         />
 
         {/* 3D overlay on hover */}

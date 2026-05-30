@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import Image from 'next/image';
+import { SmartThumbnail } from '@/components/music-icon-fallback';
 import {
   Search,
   Music,
@@ -400,12 +400,12 @@ export function SearchView() {
 
                     {/* Thumbnail */}
                     <div className="relative shrink-0 w-12 h-12 rounded-md overflow-hidden">
-                      <Image
-                        src={track.thumbnail || '/weedmusic-logo.png'}
+                      <SmartThumbnail
+                        src={track.thumbnail}
                         alt={track.title}
-                        fill
-                        className="object-cover"
-                        unoptimized
+                        videoId={track.videoId}
+                        className="object-cover w-full h-full"
+                        size="full"
                       />
                       {/* Play overlay on hover */}
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity">

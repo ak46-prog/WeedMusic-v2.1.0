@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import Image from 'next/image';
 import { Play, Heart, ListPlus, ListMusic, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useMusicStore, type Track } from '@/lib/store';
 import { formatDuration } from '@/lib/utils-music';
+import { SmartThumbnail } from '@/components/music-icon-fallback';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -240,14 +240,14 @@ export function TrackCard({ track, variant = 'grid', index, onPlay, source = 'un
           )}
         </div>
 
-        {/* Thumbnail */}
+        {/* Thumbnail with fallback */}
         <div className="relative shrink-0 w-10 h-10 rounded overflow-hidden">
-          <Image
-            src={track.thumbnail || '/weedmusic-logo.png'}
+          <SmartThumbnail
+            src={track.thumbnail}
             alt={track.title}
-            fill
-            className="object-cover card-thumb"
-            unoptimized
+            videoId={track.videoId}
+            className="object-cover w-full h-full card-thumb"
+            size="mini"
           />
         </div>
 
@@ -301,14 +301,14 @@ export function TrackCard({ track, variant = 'grid', index, onPlay, source = 'un
             : ''
         }`}
       >
-        {/* Thumbnail */}
+        {/* Thumbnail with fallback */}
         <div className="relative shrink-0 w-12 h-12 rounded-lg overflow-hidden">
-          <Image
-            src={track.thumbnail || '/weedmusic-logo.png'}
+          <SmartThumbnail
+            src={track.thumbnail}
             alt={track.title}
-            fill
-            className="object-cover card-thumb"
-            unoptimized
+            videoId={track.videoId}
+            className="object-cover w-full h-full card-thumb"
+            size="mini"
           />
           <button
             onClick={(e) => {
@@ -422,14 +422,14 @@ export function TrackCard({ track, variant = 'grid', index, onPlay, source = 'un
         isCurrentTrack ? 'is-playing' : ''
       }`}
     >
-      {/* Thumbnail with card-media-wrapper */}
+      {/* Thumbnail with music icon fallback */}
       <div className="card-media-wrapper">
-        <Image
-          src={track.thumbnail || '/weedmusic-logo.png'}
+        <SmartThumbnail
+          src={track.thumbnail}
           alt={track.title}
-          fill
-          className="object-cover card-thumb transition-transform duration-500 group-hover:scale-110"
-          unoptimized
+          videoId={track.videoId}
+          className="object-cover w-full h-full card-thumb transition-transform duration-500 group-hover:scale-110"
+          size="full"
         />
 
         {/* Play button overlay */}

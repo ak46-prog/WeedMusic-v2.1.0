@@ -137,7 +137,7 @@ export function Header() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 w-full border-b bg-background/95 supports-[backdrop-filter]:bg-background/95">
       <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-6 h-14 sm:h-16">
 
         {/* Left: Menu + Logo */}

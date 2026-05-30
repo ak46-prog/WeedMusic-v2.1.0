@@ -981,21 +981,94 @@ export const categoryMeta: Record<ThemeCategory, { label: string; icon: string; 
   },
 };
 
-/** Get the theme category based on current time of day */
+/* ---- Temporal Helpers ---- */
+
+/** Get the current day of year (1-365/366) */
+export function getDayOfYear(): number {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 0);
+  const diff = now.getTime() - start.getTime();
+  const oneDay = 1000 * 60 * 60 * 24;
+  return Math.floor(diff / oneDay);
+}
+
+/** Check if today is a weekend (Saturday or Sunday) */
+export function isWeekend(): boolean {
+  const day = new Date().getDay();
+  return day === 0 || day === 6;
+}
+
+/** Check if the user's OS prefers dark mode (fallback for auto-theme) */
+function prefersDarkMode(): boolean {
+  if (typeof window === "undefined") return true;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+/** Time-of-day period labels for human-readable descriptions */
+export type TimePeriod = "morning" | "focus" | "evening" | "night";
+
+/** Get the time period label based on current hour */
+function getTimePeriod(): TimePeriod {
+  const hour = new Date().getHours();
+  if (hour >= 6 && hour < 10) return "morning";
+  if (hour >= 10 && hour < 16) return "focus";
+  if (hour >= 16 && hour < 20) return "evening";
+  return "night";
+}
+
+/** Human-readable labels for time periods */
+const timePeriodLabels: Record<TimePeriod, string> = {
+  morning: "Morning",
+  focus: "Focus",
+  evening: "Evening",
+  night: "Night",
+};
+
+/** Get the theme category based on current time of day, OS preference, and weekend detection */
 export function getTimeCategory(): ThemeCategory {
   if (typeof window === "undefined") return "dark";
   const hour = new Date().getHours();
-  // 6-10: Morning (light), 10-16: Focus (cool), 16-20: Evening (warm), 20-6: Night (dark)
+
+  // 6-10: Morning (light)
   if (hour >= 6 && hour < 10) return "light";
+  // 10-16: Focus (cool)
   if (hour >= 10 && hour < 16) return "cool";
-  if (hour >= 16 && hour < 20) return "warm";
+  // 16-20: Evening (warm) — on weekends, prefer vibrant for party/energy vibes
+  if (hour >= 16 && hour < 20) {
+    return isWeekend() ? "vibrant" : "warm";
+  }
+  // 20-6: Night (dark) — on weekends, prefer warm for cozy late-night vibes over strict dark
+  if (isWeekend()) {
+    return "warm";
+  }
+  // Use prefers-color-scheme as a fallback hint for nighttime:
+  // If the OS prefers light mode and it's nighttime, suggest cool instead of dark
+  if (!prefersDarkMode()) {
+    return "cool";
+  }
   return "dark";
 }
 
-/** Get a recommended theme preset based on current time of day */
+/** Get a recommended theme preset based on current time of day with deterministic day-of-year rotation */
 export function getAutoThemePreset(): ThemePreset {
   const category = getTimeCategory();
   const presets = getPresetsByCategory(category);
-  // Pick the first preset from the appropriate category (stable choice)
-  return presets[0];
+  if (presets.length === 0) return themePresets[0]; // fallback
+  // Deterministic: use day-of-year to rotate through themes within the category
+  // Same day = same theme all day until the time category changes
+  const dayOfYear = getDayOfYear();
+  return presets[dayOfYear % presets.length];
+}
+
+/** Get a human-readable description of why the current temporal theme was selected */
+export function getTemporalThemeDescription(): string {
+  const dayOfYear = getDayOfYear();
+  const period = getTimePeriod();
+  const preset = getAutoThemePreset();
+  const weekend = isWeekend();
+  const modeLabel = isLightBackground(preset.colors.background) ? "Light Mode" : "Night Mode";
+  const periodLabel = timePeriodLabels[period];
+  const weekendTag = weekend ? " · Weekend" : "";
+
+  return `Day ${dayOfYear}${weekendTag} · ${periodLabel} · ${modeLabel} · ${preset.name}`;
 }

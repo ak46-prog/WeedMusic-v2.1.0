@@ -129,7 +129,7 @@ export function KidsMode() {
             <button
               key={cat.id}
               onClick={() => handleCategoryChange(cat.id)}
-              className={`category-chip ${activeCategory === cat.id ? 'active' : ''}`}
+              className={`category-chip kids-category-chip ${activeCategory === cat.id ? 'active' : ''}`}
               style={activeCategory !== cat.id ? {
                 background: 'oklch(0.97 0.05 140 / 0.4)',
                 color: 'oklch(0.3 0.05 140)',
@@ -205,8 +205,7 @@ export function KidsMode() {
                   data-track-id={track.videoId}
                   data-index={index}
                   data-source="kids"
-                  className={`premium-track-card group ${isPlaying ? 'is-playing' : ''} ${shuffleAnim ? 'animate-slide-up' : ''}`}
-                  style={isPlaying ? { borderColor: 'oklch(0.55 0.17 140)', boxShadow: '0 0 0 1px oklch(0.55 0.17 140)' } : {}}
+                  className={`kids-track-card group ${isPlaying ? 'is-playing' : ''} ${shuffleAnim ? 'animate-slide-up' : ''}`}
                 >
                   {/* SAFE Ribbon */}
                   <div className="absolute top-2 left-0 z-5 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold tracking-wide rounded-r" style={{ fontSize: '0.6rem' }}>SAFE</div>
@@ -239,7 +238,7 @@ export function KidsMode() {
 
                     {/* Duration Badge */}
                     {track.duration > 0 && (
-                      <div className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] font-medium px-2 py-0.5 rounded-full backdrop-blur-sm">
+                      <div className="absolute bottom-2 right-2 badge-solid text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
                         {formatDuration(track.duration)}
                       </div>
                     )}

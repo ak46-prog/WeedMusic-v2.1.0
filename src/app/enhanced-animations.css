@@ -1,0 +1,440 @@
+/* ============================================================
+   Enhanced Wispr Flow CSS + Cinematic Drift + No Glass Effects
+   WeedMusic Project — GPU-only animations, zero backdrop-filter
+   ============================================================ */
+
+/* ============================================================
+   1. ENHANCED WISPR FLOW ANIMATIONS (GPU-only)
+   All keyframes use only `transform` and `opacity` for GPU compositing.
+   ============================================================ */
+
+/* Wispr Flow organic breathing pulse — idle state */
+@keyframes wisprBreathe {
+  0% { transform: scale(1) translateZ(0); opacity: 0.7; }
+  50% { transform: scale(1.06) translateZ(0); opacity: 1; }
+  100% { transform: scale(1) translateZ(0); opacity: 0.7; }
+}
+
+/* Wispr Flow active listening pulse — faster, more intense */
+@keyframes wisprActivePulse {
+  0% { transform: scale(1) translateZ(0); opacity: 0.8; }
+  50% { transform: scale(1.12) translateZ(0); opacity: 1; }
+  100% { transform: scale(1) translateZ(0); opacity: 0.8; }
+}
+
+/* Wispr Flow liquid morphing orb shape */
+@keyframes wisprLiquidMorph {
+  0% { transform: scale(1) rotate(0deg) translateZ(0); border-radius: 50%; }
+  25% { transform: scale(1.04) rotate(3deg) translateZ(0); border-radius: 47% 53% 52% 48%; }
+  50% { transform: scale(1.08) rotate(-2deg) translateZ(0); border-radius: 53% 47% 48% 52%; }
+  75% { transform: scale(1.03) rotate(2deg) translateZ(0); border-radius: 48% 52% 53% 47%; }
+  100% { transform: scale(1) rotate(0deg) translateZ(0); border-radius: 50%; }
+}
+
+/* Wispr Flow smooth ring expand with rotation */
+@keyframes wisprRingExpand {
+  0% { transform: scale(0.6) rotate(0deg) translateZ(0); opacity: 0.5; }
+  100% { transform: scale(2.5) rotate(45deg) translateZ(0); opacity: 0; }
+}
+
+/* Wispr Flow waveform bar — organic sine-like movement */
+@keyframes wisprWave {
+  0%, 100% { transform: scaleY(0.1) translateZ(0); }
+  25% { transform: scaleY(0.8) translateZ(0); }
+  50% { transform: scaleY(0.3) translateZ(0); }
+  75% { transform: scaleY(1) translateZ(0); }
+}
+
+/* Wispr Flow processing spinner */
+@keyframes wisprSpin {
+  from { transform: rotate(0deg) translateZ(0); }
+  to { transform: rotate(360deg) translateZ(0); }
+}
+
+/* Wispr Flow slide-up with scale */
+@keyframes wisprSlideUpScale {
+  from { transform: translateY(40px) scale(0.95) translateZ(0); opacity: 0; }
+  to { transform: translateY(0) scale(1) translateZ(0); opacity: 1; }
+}
+
+/* Wispr Flow fade with gentle scale */
+@keyframes wisprFadeScale {
+  from { transform: scale(0.96) translateZ(0); opacity: 0; }
+  to { transform: scale(1) translateZ(0); opacity: 1; }
+}
+
+
+/* ============================================================
+   2. CINEMATIC DRIFT FOR CARDS, THUMBNAILS, ICONS
+   Card/thumbnail level animations — subtle, premium feel.
+   ============================================================ */
+
+/* Cinematic micro-drift for track cards — subtle, premium feel */
+@keyframes cinematicCardDrift {
+  0% { transform: translateY(0) translateZ(0); }
+  100% { transform: translateY(-3px) translateZ(0); }
+}
+
+/* Thumbnail cinematic scale on hover — GPU-only */
+@keyframes cinematicThumbScale {
+  0% { transform: scale(1) translateZ(0); }
+  100% { transform: scale(1.08) translateZ(0); }
+}
+
+/* Icon micro-bounce — for navigation and action icons */
+@keyframes iconMicroBounce {
+  0%, 100% { transform: translateY(0) translateZ(0); }
+  50% { transform: translateY(-2px) translateZ(0); }
+}
+
+/* Floating leaf/particle drift — for decorative CSS-only elements */
+@keyframes leafDrift {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0.6; }
+  25% { transform: translate3d(10px, -20px, 0) rotate(45deg); opacity: 0.8; }
+  50% { transform: translate3d(-5px, -40px, 0) rotate(90deg); opacity: 0.5; }
+  75% { transform: translate3d(15px, -60px, 0) rotate(135deg); opacity: 0.3; }
+  100% { transform: translate3d(0, -80px, 0) rotate(180deg); opacity: 0; }
+}
+
+/* Smile face micro-animation — for kids mode */
+@keyframes smileBounce {
+  0%, 100% { transform: scale(1) rotate(0deg) translateZ(0); }
+  25% { transform: scale(1.1) rotate(-5deg) translateZ(0); }
+  75% { transform: scale(1.1) rotate(5deg) translateZ(0); }
+}
+
+
+/* ============================================================
+   3. GLASS EFFECT REMOVAL — NO-BACKDROP UTILITIES
+   Replace all glass/backdrop-filter effects with solid GPU-friendly
+   alternatives. Zero backdrop-blur, zero glass morphism.
+   ============================================================ */
+
+/* NO-GLASS: Solid card surface — replaces glass-card */
+.card-solid {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 0.75rem);
+  will-change: transform;
+}
+
+/* NO-GLASS: Solid overlay background */
+.overlay-solid {
+  background: oklch(0.145 0 0 / 0.95);
+}
+
+/* NO-GLASS: Solid thumbnail container — no backdrop-blur */
+.thumb-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  background-color: var(--muted);
+  will-change: transform;
+}
+
+/* NO-GLASS: Solid badge backgrounds — no blur */
+.badge-solid {
+  background: oklch(0 0 0 / 0.75);
+  border-radius: 4px;
+  padding: 2px 8px;
+}
+
+
+/* ============================================================
+   4. ENHANCED PREMIUM TRACK CARD — NO GLASS, CINEMATIC DRIFT
+   Enterprise track card with GPU-only transforms, no glass,
+   and cinematic drift on hover.
+   ============================================================ */
+
+/* Enterprise Track Card — GPU-only, no glass, cinematic drift on hover */
+.premium-track-card-v2 {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+  transform: translateZ(0);
+}
+.premium-track-card-v2:hover {
+  transform: translateY(-6px) translateZ(0);
+  background-color: var(--accent);
+}
+.premium-track-card-v2:active {
+  transform: translateY(-2px) translateZ(0);
+  transition-duration: 0.1s;
+}
+.premium-track-card-v2.is-playing {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+
+/* ============================================================
+   5. WISPR FLOW VOICE UI CLASSES
+   Orb states, rings, wave bars, overlay, content, transcript,
+   spinner, and glow — all GPU-composited.
+   ============================================================ */
+
+/* Wispr Flow Orb — idle breathing */
+.wispr-orb {
+  will-change: transform, opacity;
+  animation: wisprBreathe 3s ease-in-out infinite;
+}
+
+/* Wispr Flow Orb — active listening */
+.wispr-orb-active {
+  will-change: transform, opacity;
+  animation: wisprActivePulse 1.5s ease-in-out infinite;
+}
+
+/* Wispr Flow Orb — liquid morphing */
+.wispr-orb-morph {
+  will-change: transform, border-radius;
+  animation: wisprLiquidMorph 4s ease-in-out infinite;
+}
+
+/* Wispr Flow Rings */
+.wispr-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+  animation: wisprRingExpand 3s ease-out infinite;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+.wispr-ring:nth-child(2) {
+  animation-delay: 1s;
+}
+.wispr-ring:nth-child(3) {
+  animation-delay: 2s;
+}
+
+/* Wispr Flow Wave Bars */
+.wispr-wave-bar {
+  display: inline-block;
+  width: 3px;
+  border-radius: 1000px;
+  background: var(--primary);
+  transform-origin: bottom;
+  will-change: transform;
+  transition: transform 0.15s ease-out;
+}
+.wispr-wave-bar.active {
+  animation: wisprWave 0.5s ease-in-out infinite;
+}
+
+/* Wispr Flow Overlay */
+.wispr-overlay {
+  animation: wisprFadeScale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Wispr Flow Content */
+.wispr-content {
+  animation: wisprSlideUpScale 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Wispr Flow Transcript */
+.wispr-transcript {
+  animation: wisprSlideUpScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Wispr Flow Spinner */
+.wispr-spinner {
+  animation: wisprSpin 0.8s linear infinite;
+  will-change: transform;
+}
+
+/* Wispr Flow Glow — using box-shadow (GPU composited) */
+.wispr-glow {
+  transition: box-shadow 0.3s ease;
+}
+.wispr-glow-active {
+  box-shadow: 0 0 30px 6px oklch(from var(--primary) l c h / 0.2);
+}
+
+
+/* ============================================================
+   6. KIDS MODE — NO GLASS, FUN ANIMATIONS
+   Solid colors, playful transforms, bouncy easing.
+   ============================================================ */
+
+/* Kids card — no glass, solid color, fun animation */
+.kids-track-card {
+  background-color: var(--card);
+  border: 2px solid oklch(0.55 0.17 140 / 0.3);
+  border-radius: 16px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              border-color 0.2s ease;
+  will-change: transform;
+  transform: translateZ(0);
+}
+.kids-track-card:hover {
+  transform: translateY(-4px) scale(1.02) translateZ(0);
+  border-color: oklch(0.55 0.17 140);
+}
+.kids-track-card:active {
+  transform: translateY(-1px) scale(1.01) translateZ(0);
+  transition-duration: 0.1s;
+}
+.kids-track-card.is-playing {
+  border-color: oklch(0.55 0.17 140);
+  box-shadow: 0 0 0 2px oklch(0.55 0.17 140 / 0.3);
+}
+
+/* Kids category chip */
+.kids-category-chip {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+.kids-category-chip:hover {
+  transform: translateY(-2px) translateZ(0);
+}
+.kids-category-chip.active {
+  transform: scale(1.05) translateZ(0);
+}
+
+
+/* ============================================================
+   7. HERO CINEMATIC DRIFT V2
+   Enhanced hero animation — GPU-only scale + translate3d.
+   ============================================================ */
+
+/* Enhanced Hero Cinematic Drift — GPU-only scale + translate3d */
+@keyframes heroCinematicDriftV2 {
+  0% { transform: scale(1.0) translate3d(0, 0, 0); }
+  33% { transform: scale(1.02) translate3d(5px, -4px, 0); }
+  66% { transform: scale(1.03) translate3d(-3px, -6px, 0); }
+  100% { transform: scale(1.04) translate3d(0, -8px, 0); }
+}
+
+.premium-hero-media-v2 {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  filter: contrast(1.04) brightness(0.95) saturate(1.03);
+  will-change: transform;
+  transform: translateZ(0);
+  animation: heroCinematicDriftV2 50s cubic-bezier(0.25, 1, 0.5, 1) infinite alternate;
+}
+
+
+/* ============================================================
+   8. ADDITIONAL UTILITY CLASSES
+   Helper utilities for applying animations, promoting layers,
+   and reducing motion where needed.
+   ============================================================ */
+
+/* GPU layer promotion utility */
+.gpu-layer {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Cinematic drift utility — apply to any element for subtle hover drift */
+.cinematic-drift-hover {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+  transform: translateZ(0);
+}
+.cinematic-drift-hover:hover {
+  transform: translateY(-3px) translateZ(0);
+}
+
+/* Cinematic thumbnail hover scale utility */
+.cinematic-thumb-hover {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+  transform: translateZ(0);
+}
+.cinematic-thumb-hover:hover {
+  transform: scale(1.08) translateZ(0);
+}
+
+/* Icon micro-bounce hover utility */
+.icon-bounce-hover {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+.icon-bounce-hover:hover {
+  animation: iconMicroBounce 0.4s ease-in-out;
+}
+
+/* Leaf drift decoration utility */
+.leaf-drift {
+  animation: leafDrift 8s ease-in-out infinite;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+.leaf-drift:nth-child(2) {
+  animation-delay: 2s;
+  animation-duration: 10s;
+}
+.leaf-drift:nth-child(3) {
+  animation-delay: 4s;
+  animation-duration: 12s;
+}
+
+/* Smile bounce utility */
+.smile-bounce {
+  animation: smileBounce 2s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* No-glass solid surface utility — general purpose */
+.surface-solid {
+  background: var(--card);
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Fade-in entrance utility */
+.animate-fade-in {
+  animation: wisprFadeScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Slide-up entrance utility */
+.animate-slide-up {
+  animation: wisprSlideUpScale 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Reduced motion — disable all animations for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .wispr-orb,
+  .wispr-orb-active,
+  .wispr-orb-morph,
+  .wispr-ring,
+  .wispr-wave-bar.active,
+  .wispr-spinner,
+  .premium-hero-media-v2,
+  .leaf-drift,
+  .smile-bounce,
+  .animate-fade-in,
+  .animate-slide-up {
+    animation: none !important;
+  }
+
+  .premium-track-card-v2,
+  .kids-track-card,
+  .kids-category-chip,
+  .cinematic-drift-hover,
+  .cinematic-thumb-hover,
+  .wispr-glow {
+    transition: none !important;
+  }
+
+  .premium-track-card-v2:hover,
+  .kids-track-card:hover,
+  .kids-category-chip:hover,
+  .kids-category-chip.active,
+  .cinematic-drift-hover:hover,
+  .cinematic-thumb-hover:hover {
+    transform: none !important;
+  }
+}

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./enhanced-animations.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -205,18 +206,17 @@ audio { display: none; }
   padding: 1rem;
   cursor: pointer;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, box-shadow;
+              background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+  transform: translateZ(0);
 }
 .premium-track-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-4px) translateZ(0);
   background-color: var(--accent);
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
 }
 .premium-track-card.is-playing {
-  border-color: oklch(0.65 0.2 55);
-  box-shadow: 0 0 0 1px oklch(0.65 0.2 55);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
 }
 
 /* ---- Enterprise Track Grid (4K Fluid) ---- */
@@ -266,21 +266,17 @@ audio { display: none; }
 .eq-bar:nth-child(4) { animation: eq4 0.9s ease-in-out infinite 0.15s; }
 .eq-bar.paused { animation-play-state: paused; }
 
-/* ---- Enterprise Playback Bar ---- */
+/* ---- Enterprise Playback Bar (NO backdrop-filter for INP) ---- */
 .enterprise-playback-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: oklch(0.145 0 0 / 0.8);
-  border-top: 1px solid oklch(1 0 0 / 10%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background-color: var(--card);
+  border-top: 1px solid var(--border);
   z-index: 100;
-}
-:root:not(.dark) .enterprise-playback-bar {
-  background-color: oklch(1 0 0 / 0.85);
-  border-top: 1px solid oklch(0.922 0 0);
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 /* ---- Range Input Styling ---- */
@@ -415,15 +411,14 @@ input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 .stagger-list > *:nth-child(5) { animation-delay: 160ms; }
 .stagger-list > *:nth-child(n+6) { animation-delay: 200ms; }
 
-/* ---- Glass Utilities (Reduced blur from 20px→12px for performance) ---- */
+/* ---- Glass Utilities (DEPRECATED — use .card-solid instead. Kept for backward compat) ---- */
 .glass-card {
-  background: oklch(1 0 0 / 8%);
-  backdrop-filter: blur(12px) saturate(180%);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  border: 1px solid oklch(1 0 0 / 12%);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg, 0.75rem);
+  will-change: transform;
 }
-.dark .glass-card { background: oklch(1 0 0 / 6%); border-color: oklch(1 0 0 / 8%); }
+.dark .glass-card { background: var(--card); border-color: var(--border); }
 
 /* ---- Voice Search Pulse ---- */
 @keyframes voice-pulse {
@@ -926,6 +921,226 @@ html.theme-transitioning *::after {
   0% { transform: translateY(0); }
   40% { transform: translateY(-3px); }
   100% { transform: translateY(0); }
+}
+
+/* ==========================================================================
+   ENHANCED WISPR FLOW ANIMATIONS — wispr-* class names
+   Pill-shaped floating voice UI with breathing orb, thin waveform bars,
+   expanding ring pulses, glow via box-shadow only (NO backdrop-filter),
+   smooth scale+translate entrance. Uses var(--primary) for theming.
+   ========================================================================== */
+
+/* Entrance animation: scale + translate up */
+@keyframes wisprSlideUpScale {
+  from { transform: translateX(-50%) translateY(20px) scale(0.92) translateZ(0); opacity: 0; }
+  to { transform: translateX(-50%) translateY(0) scale(1) translateZ(0); opacity: 1; }
+}
+
+/* Breathing orb for idle state */
+@keyframes wisprBreathe {
+  0%, 100% { transform: scale(1) translateZ(0); opacity: 0.7; }
+  50% { transform: scale(1.1) translateZ(0); opacity: 1; }
+}
+
+/* Active pulse for listening state */
+@keyframes wisprActivePulse {
+  0%, 100% { transform: scale(1) translateZ(0); }
+  50% { transform: scale(1.15) translateZ(0); }
+}
+
+/* Morphing orb — subtle shape shift */
+@keyframes wisprOrbMorph {
+  0% { border-radius: 50%; transform: scale(1) translateZ(0); }
+  33% { border-radius: 48% 52% 50% 50%; transform: scale(1.05) translateZ(0); }
+  66% { border-radius: 52% 48% 52% 48%; transform: scale(1.08) translateZ(0); }
+  100% { border-radius: 50%; transform: scale(1) translateZ(0); }
+}
+
+/* Expanding ring */
+@keyframes wisprRingExpand {
+  0% { transform: scale(0.8) translateZ(0); opacity: 0.5; }
+  100% { transform: scale(2.5) translateZ(0); opacity: 0; }
+}
+
+/* Wave bar animation */
+@keyframes wisprWaveBarAnim {
+  0%, 100% { transform: scaleY(0.15) translateZ(0); }
+  50% { transform: scaleY(1) translateZ(0); }
+}
+
+/* Spinner rotation */
+@keyframes wisprSpin {
+  from { transform: rotate(0deg) translateZ(0); }
+  to { transform: rotate(360deg) translateZ(0); }
+}
+
+/* Glow pulse (box-shadow only, no backdrop-filter) */
+@keyframes wisprGlowPulse {
+  0%, 100% { box-shadow: 0 0 20px 4px oklch(from var(--primary) l c h / 0.12); }
+  50% { box-shadow: 0 0 40px 10px oklch(from var(--primary) l c h / 0.28); }
+}
+
+/* Active glow pulse — stronger */
+@keyframes wisprGlowActivePulse {
+  0%, 100% { box-shadow: 0 0 30px 6px oklch(from var(--primary) l c h / 0.2); }
+  50% { box-shadow: 0 0 60px 14px oklch(from var(--primary) l c h / 0.4); }
+}
+
+/* Transcript slide-up */
+@keyframes wisprTranscriptIn {
+  from { transform: translateY(8px) translateZ(0); opacity: 0; }
+  to { transform: translateY(0) translateZ(0); opacity: 1; }
+}
+
+/* Fade in for overlay background */
+@keyframes wisprFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* --- wispr-* classes --- */
+
+/* Overlay: full-viewport click-away layer (no backdrop-filter!) */
+.wispr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  animation: wisprFadeIn 0.15s ease-out forwards;
+  pointer-events: auto;
+}
+
+/* Content: the floating pill container at bottom center */
+.wispr-content {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  z-index: 10000;
+  animation: wisprSlideUpScale 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+  pointer-events: auto;
+}
+
+/* Pill shape */
+.wispr-pill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 22px;
+  border-radius: 100px;
+  background: oklch(0.1 0 0 / 0.95);
+  border: 1px solid oklch(1 0 0 / 12%);
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.5), 0 0 50px oklch(from var(--primary) l c h / 0.08);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+  will-change: transform, box-shadow;
+}
+
+/* Orb: idle breathing */
+.wispr-orb {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: wisprBreathe 2.5s ease-in-out infinite;
+  will-change: transform, opacity;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Orb: active listening — stronger pulse */
+.wispr-orb-active {
+  animation: wisprActivePulse 1.2s ease-in-out infinite;
+  box-shadow: 0 0 16px oklch(from var(--primary) l c h / 0.4);
+}
+
+/* Orb: morphing effect */
+.wispr-orb-morph {
+  animation: wisprOrbMorph 3s ease-in-out infinite;
+}
+
+/* Expanding ring around orb */
+.wispr-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1.5px solid oklch(from var(--primary) l c h / 0.25);
+  animation: wisprRingExpand 2.5s ease-out infinite;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+.wispr-ring:nth-child(2) { animation-delay: 0.8s; }
+.wispr-ring:nth-child(3) { animation-delay: 1.6s; }
+
+/* Waveform bar inside pill */
+.wispr-wave-bar {
+  display: inline-block;
+  width: 2.5px;
+  border-radius: 1000px;
+  background: var(--primary);
+  transform-origin: bottom;
+  will-change: transform;
+  transition: height 0.08s ease-out;
+}
+.wispr-wave-bar.active {
+  animation: wisprWaveBarAnim 0.5s ease-in-out infinite;
+}
+
+/* Transcript text below pill */
+.wispr-transcript {
+  animation: wisprTranscriptIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  text-align: center;
+  max-width: 400px;
+}
+
+/* Processing spinner */
+.wispr-spinner {
+  animation: wisprSpin 0.8s linear infinite;
+  will-change: transform;
+}
+
+/* Glow effect — box-shadow only, no backdrop-filter */
+.wispr-glow {
+  animation: wisprGlowPulse 2.5s ease-in-out infinite;
+}
+
+/* Glow effect — active state (stronger) */
+.wispr-glow-active {
+  animation: wisprGlowActivePulse 1.5s ease-in-out infinite;
+}
+
+/* Tier badge inside pill */
+.wispr-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.wispr-tier-badge--native {
+  background: oklch(from var(--primary) l c h / 0.15);
+  color: var(--primary);
+  border: 1px solid oklch(from var(--primary) l c h / 0.3);
+}
+
+.wispr-tier-badge--cloud {
+  background: oklch(0.65 0.15 250 / 0.15);
+  color: oklch(0.72 0.15 250);
+  border: 1px solid oklch(0.65 0.15 250 / 0.3);
+}
+
+.wispr-tier-badge--pitch {
+  background: oklch(0.75 0.18 80 / 0.15);
+  color: oklch(0.75 0.18 80);
+  border: 1px solid oklch(0.75 0.18 80 / 0.3);
 }
 
 /* ---- Content Visibility (offscreen rendering optimization) ---- */

@@ -446,7 +446,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay, source = 'un
         </button>
 
         {/* Duration badge */}
-        <div className="absolute bottom-2 right-2 bg-black/75 text-white text-[10px] font-medium px-1.5 py-0.5 rounded backdrop-blur-sm">
+        <div className="absolute bottom-2 right-2 badge-solid text-white text-[10px] font-medium px-1.5 py-0.5 rounded">
           {formatDuration(track.duration)}
         </div>
 
@@ -456,7 +456,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay, source = 'un
         </div>
 
         {/* View count badge */}
-        <div className="absolute bottom-2 left-2 bg-black/75 text-white text-[10px] font-medium px-1.5 py-0.5 rounded flex items-center gap-0.5 view-badge backdrop-blur-sm">
+        <div className="absolute bottom-2 left-2 badge-solid text-white text-[10px] font-medium px-1.5 py-0.5 rounded flex items-center gap-0.5 view-badge">
           <Eye className="size-3" />
           {viewsLabel}
         </div>
@@ -468,7 +468,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay, source = 'un
               e.stopPropagation();
               handleFavorite();
             }}
-            className="size-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors backdrop-blur-sm"
+            className="size-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
             disabled={isFavLoading}
           >
             <Heart
@@ -482,7 +482,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay, source = 'un
               e.stopPropagation();
               handleAddToQueue();
             }}
-            className="size-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors backdrop-blur-sm"
+            className="size-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
           >
             <ListPlus className="size-3.5 text-white" />
           </button>
@@ -494,7 +494,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay, source = 'un
                     e.stopPropagation();
                     handleOpenPlaylists();
                   }}
-                  className="size-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors backdrop-blur-sm"
+                  className="size-7 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition-colors"
                 >
                   <ListMusic className="size-3.5 text-white" />
                 </button>

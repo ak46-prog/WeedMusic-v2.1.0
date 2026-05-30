@@ -75,7 +75,7 @@ export default function Home() {
       {/* Sidebar backdrop overlay */}
       {sidebarOpen && (
         <div
-          className="hidden lg:block fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+          className="hidden lg:block fixed inset-0 z-40 bg-black/20"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -104,7 +104,7 @@ export default function Home() {
       </div>
 
       {/* Footer with weed grass decoration */}
-      <footer className="mt-auto relative border-t border-border/40 bg-background/80 backdrop-blur-sm">
+      <footer className="mt-auto relative border-t border-border/40 bg-background">
         <div className="flex flex-wrap items-center justify-center gap-3 py-3 px-4 text-xs text-muted-foreground">
           <span className="font-medium">🌿</span>
           <span className="font-semibold bg-gradient-to-r from-green-600 to-orange-500 bg-clip-text text-transparent">WeedMusic</span>

@@ -30,12 +30,12 @@ export function HeroBanner() {
 
   return (
     <section className="relative w-full overflow-hidden" style={{ height: 'clamp(350px, 40vh, 700px)' }}>
-      {/* Background Image — Enterprise Cinematic Drift */}
+      {/* Background Image — Enterprise Cinematic Drift V2 */}
       <Image
         src="/weedmusic-banner.png"
         alt="WeedMusic Banner"
         fill
-        className="premium-hero-media"
+        className="premium-hero-media-v2"
         priority
       />
 

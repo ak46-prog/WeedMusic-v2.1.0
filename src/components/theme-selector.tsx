@@ -18,6 +18,9 @@ import {
   applyThemePreset,
   resetThemePreset,
   categoryMeta,
+  getTimeCategory,
+  getAutoThemePreset,
+  getTemporalThemeDescription,
   type ThemeCategory,
   type ThemePreset,
 } from '@/lib/theme-presets';
@@ -30,25 +33,8 @@ function useHasMounted() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Auto Time-Based Theme Switching                                    */
+/*  Auto Time-Based Theme Switching (imported from theme-presets.ts)   */
 /* ------------------------------------------------------------------ */
-
-function getTimeCategory(): ThemeCategory {
-  if (typeof window === 'undefined') return 'dark';
-  const hour = new Date().getHours();
-  // 6-10: Morning (light), 10-16: Focus (cool), 16-20: Evening (warm), 20-6: Night (dark)
-  if (hour >= 6 && hour < 10) return 'light';
-  if (hour >= 10 && hour < 16) return 'cool';
-  if (hour >= 16 && hour < 20) return 'warm';
-  return 'dark';
-}
-
-function getAutoThemePreset(): ThemePreset {
-  const category = getTimeCategory();
-  const presets = getPresetsByCategory(category);
-  // Pick a random preset from the appropriate category
-  return presets[Math.floor(Math.random() * presets.length)];
-}
 
 const categoryIcons: Record<ThemeCategory, React.ReactNode> = {
   dark: <Moon className="size-3.5" />,

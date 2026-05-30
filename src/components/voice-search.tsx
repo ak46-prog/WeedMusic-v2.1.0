@@ -2,12 +2,12 @@
 
 import React, { useState, useCallback, useRef, useEffect, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
-import { Mic, MicOff, X, Volume2, Cloud, Radio } from 'lucide-react';
+import { Mic, MicOff, X, Cloud, Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { setupPitchDetection, type PitchResult } from '@/lib/pitch-detect';
 
 /**
- * VoiceSearchButton — Enterprise Voice Search with 3-Tier Fallback
+ * VoiceSearchButton — Enhanced Voice Search with Wispr Flow Pill UI
  *
  * Tier 1: Web Speech API (Browser Native)
  * - Built into modern browsers, zero server cost
@@ -25,15 +25,19 @@ import { setupPitchDetection, type PitchResult } from '@/lib/pitch-detect';
  * - Detects vocal pitch/frequency via AnalyserNode
  * - Shows audio feedback even without transcription
  *
- * Wispr Flow-like Animation:
- * - Minimal floating overlay, not a full-screen takeover
- * - Flowing waveform bars driven by Web Audio API AnalyserNode
+ * Wispr Flow Pill UI:
+ * - Minimal floating pill at bottom center (NOT full-screen)
+ * - Small breathing orb (wisprBreathe when idle, wisprActivePulse when listening)
+ * - Thin waveform bars driven by Web Audio API AnalyserNode
  * - Expanding ring pulses (GPU-only scale + opacity)
- * - Smooth slide-up content transitions
+ * - Subtle glow via box-shadow only (NO backdrop-filter)
+ * - Interim transcript text below the pill
+ * - Dismiss by clicking outside or X button
  *
  * XSS Defense: textContent for all transcript display
  * Performance: GPU-only animations (transform, opacity, will-change)
  * React Portal: z-[9999] for guaranteed overlay stacking
+ * Hydration: useSyncExternalStore for SSR-safe checks
  */
 
 // Types for Web Speech API
@@ -121,8 +125,8 @@ interface VoiceSearchButtonProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-// Number of waveform bars
-const WAVE_BAR_COUNT = 24;
+// Number of waveform bars inside the pill
+const WAVE_BAR_COUNT = 16;
 
 // Max recording duration for cloud tier (ms)
 const CLOUD_MAX_RECORDING_MS = 15_000;
@@ -210,7 +214,6 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
       animFrameRef.current = requestAnimationFrame(updateLevels);
     } catch (err) {
       console.warn('[VoiceSearch] AnalyserNode setup failed, using state-based levels:', err);
-      // Fallback: use simple state-based levels from speech events
     }
   }, []);
 
@@ -254,7 +257,6 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
   // --- Auto-detect language from browser ---
   const getLanguage = useCallback(() => {
     if (typeof navigator === 'undefined') return 'en-US';
-    // Use the browser's language setting — supports ANY language/country
     return navigator.language || 'en-US';
   }, []);
 
@@ -263,7 +265,6 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
     setFallbackTier('pitch');
     setOverlayState('listening');
 
-    // If we already have an analyser, use it; otherwise set one up
     const startPitch = () => {
       const analyser = analyserRef.current;
       if (!analyser) return;
@@ -277,9 +278,7 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
     if (analyserRef.current) {
       startPitch();
     } else {
-      // Need to set up analyser first
       setupAnalyser().then(() => {
-        // Small delay to let analyser initialize
         setTimeout(startPitch, 100);
       });
     }
@@ -291,7 +290,6 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
     setOverlayState('listening');
 
     try {
-      // Start AnalyserNode for visualization
       await setupAnalyser();
 
       const stream = streamRef.current;
@@ -299,7 +297,6 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
         throw new Error('No media stream available');
       }
 
-      // Set up MediaRecorder
       const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
         ? 'audio/webm;codecs=opus'
         : MediaRecorder.isTypeSupported('audio/webm')
@@ -316,7 +313,7 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
       };
 
       recorder.onstop = async () => {
-        if (!isListeningRef.current) return; // Cancelled
+        if (!isListeningRef.current) return;
 
         setOverlayState('processing');
 
@@ -335,7 +332,6 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
           const data = await response.json();
 
           if (data.transcript) {
-            // Success — use the cloud transcript
             setTimeout(() => {
               onTranscriptRef.current(data.transcript.trim());
               setIsListening(false);
@@ -345,12 +341,10 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
             return;
           }
 
-          // Cloud API failed — fall back to pitch detection (Tier 3)
           console.warn('[VoiceSearch] Cloud API failed:', data.error, data.detail);
           startPitchDetection();
         } catch (err) {
           console.warn('[VoiceSearch] Cloud API request failed:', err);
-          // Fall back to pitch detection (Tier 3)
           startPitchDetection();
         }
       };
@@ -361,9 +355,8 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
       };
 
       mediaRecorderRef.current = recorder;
-      recorder.start(250); // Collect data every 250ms
+      recorder.start(250);
 
-      // Auto-stop after max recording time
       cloudTimeoutRef.current = setTimeout(() => {
         if (recorder.state === 'recording') {
           try { recorder.stop(); } catch { /* */ }
@@ -381,9 +374,7 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state === 'recording') {
       try { recorder.stop(); } catch { /* */ }
-      // The onstop handler will process the audio
     } else {
-      // No active recorder, just clean up
       setIsListening(false);
       cleanupAudio();
       cleanupCloud();
@@ -392,7 +383,6 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
 
   // --- Start listening ---
   const startListening = useCallback(async () => {
-    // Reset state
     setInterimText('');
     interimTextRef.current = '';
     setErrorMsg('');
@@ -400,7 +390,6 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
     setFallbackTier('native');
     setOverlayState('listening');
 
-    // Stop any existing recognition
     if (recognitionRef.current) {
       try { recognitionRef.current.abort(); } catch { /* */ }
     }
@@ -422,7 +411,7 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
 
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = getLanguage(); // Auto-detect from browser
+    recognition.lang = getLanguage();
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
@@ -451,7 +440,6 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
       if (finalTranscript) {
         setInterimText('');
         interimTextRef.current = '';
-        // Use ref for latest callback — XSS safe via textContent in overlay
         setTimeout(() => {
           onTranscriptRef.current(finalTranscript.trim());
         }, 0);
@@ -463,16 +451,13 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
       const shouldFallback = ['not-allowed', 'service-not-allowed', 'network', 'no-speech', 'audio-capture'].includes(event.error);
 
       if (shouldFallback) {
-        // Don't show error — fall back to cloud tier instead
         console.warn(`[VoiceSearch] Native speech error "${event.error}", falling back to cloud API`);
         try { recognition.abort(); } catch { /* */ }
         recognitionRef.current = null;
-        // Fall back to Tier 2 (cloud)
         setTimeout(() => { startCloudRecording(); }, 0);
         return;
       }
 
-      // Non-fallible errors (aborted, etc.)
       if (event.error === 'aborted') return;
 
       let message = `Voice search error: ${event.error}. Please try again.`;
@@ -483,7 +468,6 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
     };
 
     recognition.onend = () => {
-      // If there's interim text when recognition ends, use it
       const latestInterim = interimTextRef.current;
       if (latestInterim && latestInterim.trim()) {
         setInterimText('');
@@ -492,7 +476,6 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
           onTranscriptRef.current(latestInterim.trim());
         }, 0);
       } else {
-        // Clean end with no transcript — just close
         setIsListening(false);
         cleanupAudio();
       }
@@ -503,7 +486,6 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
     try {
       recognition.start();
     } catch (err) {
-      // Native speech failed to start — fall back to cloud
       console.warn('[VoiceSearch] Native speech start failed, falling back to cloud API:', err);
       setIsListening(true);
       setTimeout(() => { startCloudRecording(); }, 0);
@@ -553,243 +535,185 @@ export function VoiceSearchButton({ onTranscript, className = '', size = 'md' }:
   // Detect if analyser is active (has real levels)
   const hasRealAudio = audioLevels.some(l => l > 0.15);
 
-  // Tier badge colors and labels
-  const tierConfig: Record<FallbackTier, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
+  // Tier badge labels
+  const tierConfig: Record<FallbackTier, { label: string; icon: React.ReactNode }> = {
     native: {
       label: 'Browser',
-      color: 'oklch(0.72 0.19 142)',
-      bgColor: 'oklch(0.72 0.19 142 / 0.15)',
-      icon: <Mic className="size-3" />,
+      icon: <Mic className="size-2.5" />,
     },
     cloud: {
       label: 'Cloud AI',
-      color: 'oklch(0.72 0.15 65)',
-      bgColor: 'oklch(0.72 0.15 65 / 0.15)',
-      icon: <Cloud className="size-3" />,
+      icon: <Cloud className="size-2.5" />,
     },
     pitch: {
       label: 'Audio',
-      color: 'oklch(0.75 0.15 55)',
-      bgColor: 'oklch(0.75 0.15 55 / 0.15)',
-      icon: <Radio className="size-3" />,
+      icon: <Radio className="size-2.5" />,
     },
   };
 
-  // Status text based on tier and state
+  // Status text for the pill
   const getStatusText = () => {
-    if (overlayState === 'processing') {
-      return 'Processing with cloud AI...';
-    }
-    if (overlayState === 'error') {
-      return 'Something went wrong';
-    }
+    if (overlayState === 'processing') return 'Processing...';
+    if (overlayState === 'error') return 'Error';
     if (fallbackTier === 'pitch') {
-      return pitchInfo?.frequency ? 'Voice detected' : 'Listening...';
+      return pitchInfo?.frequency ? 'Voice detected' : 'Listening';
     }
-    return hasRealAudio ? 'Listening...' : 'Say something...';
-  };
-
-  // Subtitle text
-  const getSubtitleText = () => {
-    if (overlayState === 'processing') {
-      return 'Transcribing your audio...';
-    }
-    if (fallbackTier === 'pitch') {
-      return pitchInfo?.frequency
-        ? 'Voice detected. Cloud transcription unavailable.'
-        : 'Speak clearly — detecting audio input';
-    }
-    if (fallbackTier === 'cloud') {
-      return 'Recording for cloud transcription';
-    }
-    return 'Speak in any language — auto-detected from your browser';
-  };
-
-  // Orb color based on tier
-  const getOrbColor = () => {
-    if (overlayState === 'processing') return 'oklch(0.72 0.15 65)'; // Amber for processing
-    if (fallbackTier === 'native') return 'oklch(0.65 0.2 55)';     // Original orange
-    if (fallbackTier === 'cloud') return 'oklch(0.72 0.15 65)';      // Amber for cloud
-    if (fallbackTier === 'pitch') {
-      return pitchInfo?.frequency ? 'oklch(0.75 0.15 55)' : 'oklch(0.65 0.2 55 / 0.6)';
-    }
-    return 'oklch(0.65 0.2 55)';
-  };
-
-  const getOrbColorFaded = () => {
-    if (overlayState === 'processing') return 'oklch(0.72 0.15 65 / 0.6)';
-    if (fallbackTier === 'native') return 'oklch(0.65 0.2 55 / 0.6)';
-    if (fallbackTier === 'cloud') return 'oklch(0.72 0.15 65 / 0.6)';
-    if (fallbackTier === 'pitch') return 'oklch(0.75 0.15 55 / 0.6)';
-    return 'oklch(0.65 0.2 55 / 0.6)';
+    return hasRealAudio ? 'Listening' : 'Say something';
   };
 
   // The active tier config
   const currentTier = tierConfig[fallbackTier];
 
-  // The overlay content
+  // Click-outside handler — uses macrotask offloading
+  const handleOverlayClick = useCallback(() => {
+    setTimeout(() => { cancelListening(); }, 0);
+  }, [cancelListening]);
+
+  // The Wispr Flow pill overlay content
   const overlayContent = isListening ? (
-    <div
-      className="flow-overlay fixed inset-0 z-[9999] flex items-center justify-center"
-      style={{ backgroundColor: 'oklch(0.145 0 0 / 0.92)' }}
-      data-tier={fallbackTier}
-      data-state={overlayState}
-    >
-      <div className="flow-content flex flex-col items-center gap-6 max-w-lg mx-auto px-6">
-        {/* Close button */}
-        <button
-          onClick={cancelListening}
-          className="absolute top-4 right-4 size-10 rounded-full flex items-center justify-center transition-colors duration-200"
-          style={{ backgroundColor: 'oklch(1 0 0 / 8%)' }}
-          aria-label="Cancel voice search"
-        >
-          <X className="size-5" style={{ color: 'oklch(0.708 0 0)' }} />
-        </button>
+    <>
+      {/* Click-away layer: transparent overlay to catch outside clicks */}
+      <div
+        className="wispr-overlay"
+        style={{ backgroundColor: 'oklch(0.1 0 0 / 0.3)' }}
+        onClick={handleOverlayClick}
+        data-tier={fallbackTier}
+        data-state={overlayState}
+      />
 
-        {/* Tier indicator badge */}
-        <div
-          className="absolute top-5 left-5 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
-          style={{
-            backgroundColor: currentTier.bgColor,
-            color: currentTier.color,
-          }}
-        >
-          {currentTier.icon}
-          {currentTier.label}
-        </div>
-
-        {/* Flow Orb with expanding rings */}
-        <div className="relative flex items-center justify-center" style={{ width: '120px', height: '120px' }}>
-          {/* Expanding rings (GPU-only) */}
-          <div className="flow-ring" style={{ inset: '-20px' }} />
-          <div className="flow-ring" style={{ inset: '-20px' }} />
-          <div className="flow-ring" style={{ inset: '-20px' }} />
-
-          {/* Glow backdrop */}
+      {/* Floating pill at bottom center */}
+      <div className="wispr-content">
+        {/* The pill itself */}
+        <div className={`wispr-pill ${hasRealAudio ? 'wispr-glow-active' : 'wispr-glow'}`}>
+          {/* Orb with expanding rings */}
           <div
-            className="absolute rounded-full"
-            style={{
-              width: '80px',
-              height: '80px',
-              background: hasRealAudio
-                ? `radial-gradient(circle, ${getOrbColor().replace(')', ' / 0.2)')} 0%, transparent 70%)`
-                : `radial-gradient(circle, ${getOrbColor().replace(')', ' / 0.1)')} 0%, transparent 70%)`,
-              filter: 'blur(5px)',
-            }}
-          />
-
-          {/* Main orb */}
-          <div
-            className={`flow-orb relative rounded-full flex items-center justify-center flow-glow ${
-              hasRealAudio ? '' : ''
+            className={`wispr-orb ${
+              overlayState === 'processing'
+                ? ''
+                : hasRealAudio
+                  ? 'wispr-orb-active wispr-orb-morph'
+                  : ''
             }`}
-            style={{
-              width: hasRealAudio ? '88px' : '80px',
-              height: hasRealAudio ? '88px' : '80px',
-              backgroundColor: hasRealAudio ? getOrbColor() : getOrbColorFaded(),
-              transition: 'width 0.2s, height 0.2s, background-color 0.2s',
-            }}
           >
+            {/* Expanding rings (GPU-only) */}
+            {hasRealAudio && (
+              <>
+                <div className="wispr-ring" />
+                <div className="wispr-ring" />
+                <div className="wispr-ring" />
+              </>
+            )}
+
+            {/* Orb icon */}
             {overlayState === 'processing' ? (
-              // Spinning indicator for processing state
-              <div className="size-9 relative">
+              <div className="wispr-spinner size-4">
                 <div
-                  className="absolute inset-0 rounded-full border-2 border-white/30 border-t-white"
-                  style={{ animation: 'spin 1s linear infinite' }}
+                  className="size-4 rounded-full border-2 border-white/30 border-t-white"
                 />
               </div>
             ) : hasRealAudio ? (
-              <Volume2 className="size-9 text-white" />
+              <svg className="size-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                <line x1="12" y1="19" x2="12" y2="22" />
+              </svg>
             ) : (
-              <Mic className="size-9 text-white" />
+              <Mic className="size-4 text-white/90" />
             )}
           </div>
-        </div>
 
-        {/* Wispr Flow Waveform Bars — driven by AnalyserNode */}
-        <div className="flex items-center justify-center gap-[3px]" style={{ height: '40px' }}>
-          {audioLevels.map((level, i) => (
-            <div
-              key={i}
-              className={hasRealAudio ? 'flow-wave-bar active' : 'flow-wave-bar'}
-              style={{
-                height: `${Math.max(8, level * 36)}px`,
-                animationDelay: hasRealAudio ? `${i * 0.04}s` : undefined,
-                animationDuration: hasRealAudio ? `${0.4 + Math.random() * 0.4}s` : undefined,
-                backgroundColor: hasRealAudio
-                  ? `${getOrbColor().replace(')', ` / ${0.5 + level * 0.5})`)}`
-                  : `${getOrbColor().replace(')', ' / 0.3)')}`,
-              }}
-            />
-          ))}
-        </div>
+          {/* Waveform bars — driven by AnalyserNode */}
+          <div className="flex items-center gap-[2px]" style={{ height: '20px' }}>
+            {audioLevels.map((level, i) => (
+              <div
+                key={i}
+                className={`wispr-wave-bar ${hasRealAudio ? 'active' : ''}`}
+                style={{
+                  height: `${Math.max(4, level * 18)}px`,
+                  animationDelay: hasRealAudio ? `${i * 0.03}s` : undefined,
+                  animationDuration: hasRealAudio ? `${0.3 + Math.random() * 0.3}s` : undefined,
+                  opacity: hasRealAudio
+                    ? 0.5 + level * 0.5
+                    : 0.3,
+                }}
+              />
+            ))}
+          </div>
 
-        {/* Status text */}
-        <div className="text-center">
-          <p className="text-lg font-semibold" style={{ color: 'oklch(0.985 0 0)' }}>
+          {/* Status text */}
+          <span
+            className="text-xs font-medium text-white/80 whitespace-nowrap"
+          >
             {getStatusText()}
-          </p>
-          <p className="text-sm mt-1" style={{ color: 'oklch(0.708 0 0)' }}>
-            {getSubtitleText()}
-          </p>
-          {/* Pitch info display for Tier 3 */}
-          {fallbackTier === 'pitch' && pitchInfo?.frequency > 0 && pitchInfo.note && (
-            <p className="text-xs mt-2 font-mono" style={{ color: currentTier.color }}>
-              {pitchInfo.note} · {Math.round(pitchInfo.frequency)}Hz · clarity {Math.round(pitchInfo.clarity * 100)}%
-            </p>
-          )}
+          </span>
+
+          {/* Tier badge */}
+          <span className={`wispr-tier-badge wispr-tier-badge--${fallbackTier}`}>
+            {currentTier.icon}
+            {currentTier.label}
+          </span>
+
+          {/* Close button */}
+          <button
+            onClick={() => { setTimeout(() => { cancelListening(); }, 0); }}
+            className="size-6 rounded-full flex items-center justify-center transition-colors duration-150 hover:bg-white/10 ml-1"
+            aria-label="Cancel voice search"
+          >
+            <X className="size-3.5 text-white/60" />
+          </button>
         </div>
 
-        {/* Interim transcript display — XSS safe via textContent pattern */}
+        {/* Interim transcript below pill — XSS safe via textContent pattern (React JSX) */}
         {interimText && (
-          <div className="flow-transcript w-full text-center">
+          <div className="wispr-transcript mt-3 mx-auto">
             <div
-              className="rounded-xl px-5 py-4"
+              className="rounded-2xl px-4 py-2.5"
               style={{
-                backgroundColor: 'oklch(0.65 0.2 55 / 0.08)',
-                border: '1px solid oklch(0.65 0.2 55 / 0.2)',
+                backgroundColor: 'oklch(0.1 0 0 / 0.85)',
+                border: `1px solid oklch(from var(--primary) l c h / 0.2)`,
               }}
             >
-              <p className="text-xs mb-1" style={{ color: 'oklch(0.708 0 0)' }}>Heard:</p>
-              <p className="text-lg font-medium leading-tight" style={{ color: 'oklch(0.985 0 0)' }}>
+              <p className="text-xs text-white/40 mb-0.5">Heard:</p>
+              <p className="text-sm font-medium text-white/90 leading-snug">
                 &ldquo;{interimText}&rdquo;
               </p>
             </div>
           </div>
         )}
 
-        {/* Action buttons — hide Done button during processing */}
-        <div className="flex items-center gap-3 mt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={cancelListening}
-            className="rounded-full px-6 gap-2"
-            style={{ borderColor: 'oklch(1 0 0 / 15%)', color: 'oklch(0.708 0 0)' }}
-          >
-            <X className="size-4" />
-            Cancel
-          </Button>
-          {overlayState !== 'processing' && (
-            <Button
-              size="sm"
-              onClick={stopListening}
-              className="rounded-full px-6 gap-2 text-white"
-              style={{ backgroundColor: getOrbColor() }}
+        {/* Pitch info for Tier 3 */}
+        {fallbackTier === 'pitch' && pitchInfo?.frequency > 0 && pitchInfo.note && (
+          <div className="wispr-transcript mt-2 mx-auto">
+            <p
+              className="text-xs font-mono text-center"
+              style={{ color: 'oklch(0.75 0.18 80)' }}
             >
-              <MicOff className="size-4" />
+              {pitchInfo.note} · {Math.round(pitchInfo.frequency)}Hz · clarity {Math.round(pitchInfo.clarity * 100)}%
+            </p>
+          </div>
+        )}
+
+        {/* Done button below pill */}
+        {overlayState !== 'processing' && (
+          <div className="flex justify-center mt-3">
+            <button
+              onClick={() => { setTimeout(() => { stopListening(); }, 0); }}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-medium text-white/70 transition-colors duration-150 hover:text-white hover:bg-white/10"
+              style={{ border: '1px solid oklch(1 0 0 / 12%)' }}
+            >
+              <MicOff className="size-3.5" />
               Done
-            </Button>
-          )}
-        </div>
+            </button>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   ) : null;
 
   // Always render the button — if native speech not supported, clicking will go to cloud tier
   return (
     <>
-      {/* The mic button */}
+      {/* The mic button (unchanged) */}
       <div className="relative">
         <Button
           variant="ghost"

@@ -224,7 +224,7 @@ export function Header() {
 
           <QualitySettings />
 
-          {/* Theme Preset Selector (50 themes) */}
+          {/* Color Palette & Festival Selector */}
           <ThemeSelector />
 
           {/* Dark/Light/System toggle */}

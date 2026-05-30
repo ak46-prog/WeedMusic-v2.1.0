@@ -30,9 +30,9 @@ export function HeroBanner() {
 
   return (
     <section className="relative w-full h-[45vh] min-h-[300px] max-h-[440px] overflow-hidden">
-      {/* Background Image */}
+      {/* Background Image - new banner */}
       <Image
-        src="/weedmusic-banner.png"
+        src="/weedmusic-banner-new.png"
         alt="weedmusic Banner"
         fill
         className="object-cover"
@@ -54,7 +54,7 @@ export function HeroBanner() {
       </div>
 
       {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 pb-8">
+      <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 pb-16">
         <div className="max-w-2xl">
           <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2">
             Welcome to <span className="bg-gradient-to-r from-green-500 via-orange-500 to-green-500 bg-clip-text text-transparent">weedmusic</span>
@@ -84,19 +84,63 @@ export function HeroBanner() {
         </div>
       </div>
 
-      {/* Grass patches at the bottom */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-end justify-around pointer-events-none overflow-hidden">
-        <span className="text-2xl md:text-3xl animate-pulse" style={{ animationDuration: '2s', animationDelay: '0s' }}>🌿</span>
-        <span className="text-xl md:text-2xl animate-pulse" style={{ animationDuration: '2.5s', animationDelay: '0.3s' }}>🌿</span>
-        <span className="text-2xl md:text-3xl animate-pulse" style={{ animationDuration: '2.2s', animationDelay: '0.6s' }}>🌿</span>
-        <span className="text-lg md:text-xl animate-pulse" style={{ animationDuration: '2.8s', animationDelay: '0.1s' }}>🌿</span>
-        <span className="text-2xl md:text-3xl animate-pulse" style={{ animationDuration: '2.3s', animationDelay: '0.4s' }}>🌿</span>
-        <span className="text-xl md:text-2xl animate-pulse" style={{ animationDuration: '2.6s', animationDelay: '0.7s' }}>🌿</span>
-        <span className="text-2xl md:text-3xl animate-pulse" style={{ animationDuration: '2.1s', animationDelay: '0.2s' }}>🌿</span>
-        <span className="text-lg md:text-xl animate-pulse" style={{ animationDuration: '2.7s', animationDelay: '0.5s' }}>🌿</span>
-        <span className="text-2xl md:text-3xl animate-pulse" style={{ animationDuration: '2.4s', animationDelay: '0.8s' }}>🌿</span>
-        <span className="text-xl md:text-2xl animate-pulse" style={{ animationDuration: '2.9s', animationDelay: '0.15s' }}>🌿</span>
+      {/* 3D Parallax Grass overlay at the bottom */}
+      <div className="absolute bottom-0 left-0 right-0 pointer-events-none grass-3d-container">
+        <div className="grass-3d-strip">
+          <Image
+            src="/grass.png"
+            alt=""
+            fill
+            className="object-cover object-bottom grass-3d-image"
+            aria-hidden="true"
+            priority
+          />
+        </div>
       </div>
+
+      {/* 3D Grass CSS Animations */}
+      <style jsx>{`
+        .grass-3d-container {
+          perspective: 600px;
+          perspective-origin: 50% 0%;
+          height: 120px;
+        }
+        .grass-3d-strip {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          transform-style: preserve-3d;
+          animation: grass-sway 6s ease-in-out infinite;
+        }
+        .grass-3d-image {
+          animation: grass-flow 8s linear infinite;
+        }
+        @keyframes grass-sway {
+          0%, 100% {
+            transform: rotateX(45deg) translateZ(0px) rotateZ(0deg);
+          }
+          25% {
+            transform: rotateX(42deg) translateZ(4px) rotateZ(-0.5deg);
+          }
+          50% {
+            transform: rotateX(45deg) translateZ(0px) rotateZ(0deg);
+          }
+          75% {
+            transform: rotateX(48deg) translateZ(-4px) rotateZ(0.5deg);
+          }
+        }
+        @keyframes grass-flow {
+          0% {
+            transform: translateX(0) scaleX(1.1);
+          }
+          50% {
+            transform: translateX(-5px) scaleX(1.15);
+          }
+          100% {
+            transform: translateX(0) scaleX(1.1);
+          }
+        }
+      `}</style>
     </section>
   );
 }

@@ -18,6 +18,17 @@ const categories = [
   { id: 'fun', name: 'Fun & Play', emoji: '🎈', query: 'fun play songs for kids' },
 ];
 
+/** Convert YouTube thumbnail URLs to higher quality kids-friendly versions */
+const getKidsThumbnail = (url: string) => {
+  if (!url) return '/zmusic-logo.png';
+  // Convert to higher quality thumbnail
+  return url
+    .replace('/default.jpg', '/mqdefault.jpg')
+    .replace('/sddefault.jpg', '/mqdefault.jpg')
+    .replace('/hqdefault.jpg', '/mqdefault.jpg')
+    .replace('/maxresdefault.jpg', '/mqdefault.jpg');
+};
+
 /* ── Floating Bubbles Background ─────────────────────────────── */
 function FloatingBubbles() {
   const bubbles = useRef(
@@ -90,15 +101,15 @@ function FrameCard({
       className="group relative rounded-2xl overflow-hidden transition-all duration-300 ease-out
         hover:-translate-y-2 hover:scale-[1.03] hover:shadow-2xl hover:shadow-green-400/30
         active:scale-[0.98] active:translate-y-0
-        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2"
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-400 focus-visible:ring-offset-2 min-h-[180px]"
     >
       {/* Gradient border wrapper */}
-      <div className="p-[2px] rounded-2xl bg-gradient-to-br from-green-400 via-emerald-400 to-teal-400">
-        <div className="rounded-2xl overflow-hidden bg-white dark:bg-gray-900">
+      <div className="p-[2px] rounded-2xl bg-gradient-to-br from-green-400 via-emerald-400 to-teal-400 h-full">
+        <div className="rounded-2xl overflow-hidden bg-white dark:bg-gray-900 h-full flex flex-col">
           {/* Thumbnail */}
           <div className="relative aspect-square w-full overflow-hidden">
             <Image
-              src={track.thumbnail || '/zmusic-logo.png'}
+              src={getKidsThumbnail(track.thumbnail)}
               alt={track.title}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -138,8 +149,8 @@ function FrameCard({
 
           {/* Info */}
           <div className="p-3">
-            <p className="text-sm font-semibold truncate leading-tight">{track.title}</p>
-            <p className="text-xs text-muted-foreground truncate mt-1">{track.artist}</p>
+            <p className="text-[15px] font-semibold truncate leading-tight">{track.title}</p>
+            <p className="text-sm text-muted-foreground truncate mt-1">{track.artist}</p>
           </div>
         </div>
       </div>
@@ -294,7 +305,7 @@ export function KidsMode() {
 
         {/* Loading Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
             {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="space-y-2">
                 <Skeleton className="aspect-square w-full rounded-2xl" />
@@ -316,7 +327,7 @@ export function KidsMode() {
           </div>
         ) : (
           /* Track Grid */
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-5">
             {tracks.map((track) => (
               <FrameCard
                 key={track.videoId}

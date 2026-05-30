@@ -303,7 +303,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
         {/* Thumbnail */}
         <div className="relative shrink-0 w-10 h-10 rounded overflow-hidden">
           <Image
-            src={track.thumbnail || '/weedmusic-logo.png'}
+            src={track.thumbnail ? track.thumbnail.replace('/default.jpg', '/mqdefault.jpg') : '/weedmusic-logo.png'}
             alt={track.title}
             fill
             className="object-cover"
@@ -314,7 +314,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
         {/* Title + Artist • Views */}
         <div className="flex-1 min-w-0">
           <p
-            className={`text-sm font-medium truncate ${
+            className={`text-[15px] font-medium truncate ${
               isCurrentTrack ? 'text-orange-500' : ''
             }`}
           >
@@ -365,7 +365,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
         {/* Thumbnail */}
         <div className="relative shrink-0 w-12 h-12 rounded-lg overflow-hidden">
           <Image
-            src={track.thumbnail || '/weedmusic-logo.png'}
+            src={track.thumbnail ? track.thumbnail.replace('/default.jpg', '/mqdefault.jpg') : '/weedmusic-logo.png'}
             alt={track.title}
             fill
             className="object-cover"
@@ -392,7 +392,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
               <p
-                className={`text-sm font-medium truncate ${
+                className={`text-[15px] font-medium truncate ${
                   isCurrentTrack ? 'text-orange-500' : ''
                 }`}
               >
@@ -497,7 +497,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
         {/* Thumbnail with 3D depth */}
         <div className="thumb-3d relative aspect-square w-full overflow-hidden">
           <Image
-            src={track.thumbnail || '/weedmusic-logo.png'}
+            src={track.thumbnail ? track.thumbnail.replace('/default.jpg', '/mqdefault.jpg') : '/weedmusic-logo.png'}
             alt={track.title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -603,7 +603,7 @@ export function TrackCard({ track, variant = 'grid', index, onPlay }: TrackCardP
         {/* Info */}
         <div className="p-3">
           <p
-            className={`text-sm font-medium truncate ${
+            className={`text-[15px] font-medium truncate ${
               isCurrentTrack ? 'text-orange-500' : ''
             }`}
           >

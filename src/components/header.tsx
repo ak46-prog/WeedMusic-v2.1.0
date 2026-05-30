@@ -91,7 +91,7 @@ function ThemeToggle() {
 }
 
 export function Header() {
-  const { childMode, toggleChildMode, sidebarOpen, setSidebarOpen } = useMusicStore();
+  const { childMode, sidebarOpen, setSidebarOpen } = useMusicStore();
   const [searchInput, setSearchInput] = useState('');
   const [dateTime, setDateTime] = useState('');
 
@@ -214,7 +214,14 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={toggleChildMode}
+            onClick={() => {
+              const current = useMusicStore.getState().childMode;
+              if (current) {
+                useMusicStore.setState({ childMode: false, view: 'home' });
+              } else {
+                useMusicStore.setState({ childMode: true, view: 'kids' });
+              }
+            }}
             className={`size-9 transition-all duration-200 ${
               childMode
                 ? 'text-green-500 bg-green-500/10 hover:bg-green-500/20 hover:text-green-600'

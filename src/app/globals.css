@@ -1413,3 +1413,37 @@ iframe[id^="yt-player-"] {
   animation: marquee 30s linear infinite;
   opacity: 0.6;
 }
+
+/* ---- 3D Grass Motion Flow ---- */
+@keyframes grass-sway-3d {
+  0%, 100% {
+    transform: perspective(600px) rotateX(8deg) translateZ(0px) rotateZ(0deg);
+  }
+  25% {
+    transform: perspective(600px) rotateX(4deg) translateZ(10px) rotateZ(1deg);
+  }
+  50% {
+    transform: perspective(600px) rotateX(12deg) translateZ(5px) rotateZ(-1deg);
+  }
+  75% {
+    transform: perspective(600px) rotateX(6deg) translateZ(15px) rotateZ(0.5deg);
+  }
+}
+.animate-grass-3d {
+  animation: grass-sway-3d 6s ease-in-out infinite;
+  transform-style: preserve-3d;
+  transform-origin: bottom center;
+}
+
+@keyframes grass-flow {
+  0% {
+    background-position: 0% bottom;
+  }
+  100% {
+    background-position: 200% bottom;
+  }
+}
+.animate-grass-flow {
+  animation: grass-flow 20s linear infinite;
+  background-size: 200% 100%;
+}

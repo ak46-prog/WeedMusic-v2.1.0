@@ -22,6 +22,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { Github, Play, Globe, ExternalLink, Shield } from 'lucide-react';
 import { PWARegister } from '@/components/pwa-register';
 import { TvChannels } from '@/components/tv-channels';
+import { AdSenseBanner } from '@/components/adsense-banner';
 
 export default function Home() {
   const view = useMusicStore((s) => s.view);
@@ -145,6 +146,7 @@ export default function Home() {
         </div>
       </footer>
 
+      <AdSenseBanner />
       <MobileNav />
       <MusicPlayer />
       {showVideoPlayer && <VideoPlayer />}

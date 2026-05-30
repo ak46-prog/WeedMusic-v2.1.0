@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useSyncExternalStore } from 'react';
+import { useState, useEffect, useSyncExternalStore, useCallback } from 'react';
 import Image from 'next/image';
 import { Search, Baby, Car, Menu, Clock, Sun, Moon, Monitor } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,7 @@ import { useTheme } from 'next-themes';
 import { QualitySettings } from '@/components/quality-settings';
 import { VoiceSearchButton } from '@/components/voice-search';
 import { AuthButton } from '@/components/auth-button';
+import { ThemeSelector } from '@/components/theme-selector';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -91,7 +92,10 @@ function ThemeToggle() {
 }
 
 export function Header() {
-  const { childMode, toggleChildMode, sidebarOpen, setSidebarOpen } = useMusicStore();
+  const childMode = useMusicStore((s) => s.childMode);
+  const toggleChildMode = useMusicStore((s) => s.toggleChildMode);
+  const sidebarOpen = useMusicStore((s) => s.sidebarOpen);
+  const setSidebarOpen = useMusicStore((s) => s.setSidebarOpen);
   const [searchInput, setSearchInput] = useState('');
   const [dateTime, setDateTime] = useState('');
 
@@ -108,20 +112,29 @@ export function Header() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleSearch = () => {
-    if (searchInput.trim()) {
-      useMusicStore.setState({ searchQuery: searchInput.trim(), view: 'search' });
+  // INP Fix: Macrotask offloading — decouple search state update from click handler
+  const handleSearch = useCallback(() => {
+    const query = searchInput.trim();
+    if (query) {
+      // setTimeout(0) offloads the store update to a macrotask,
+      // preventing the click handler from blocking the main thread
+      setTimeout(() => {
+        useMusicStore.setState({ searchQuery: query, view: 'search' });
+      }, 0);
     }
-  };
+  }, [searchInput]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleSearch();
-  };
+  }, [handleSearch]);
 
-  const handleVoiceSearch = (text: string) => {
+  const handleVoiceSearch = useCallback((text: string) => {
     setSearchInput(text);
-    useMusicStore.setState({ searchQuery: text, view: 'search' });
-  };
+    // Macrotask offload for INP
+    setTimeout(() => {
+      useMusicStore.setState({ searchQuery: text, view: 'search' });
+    }, 0);
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
@@ -140,7 +153,10 @@ export function Header() {
           </Button>
 
           <button
-            onClick={() => useMusicStore.setState({ view: 'home' })}
+            onClick={() => {
+              // Macrotask offload
+              setTimeout(() => useMusicStore.setState({ view: 'home' }), 0);
+            }}
             className="flex items-center gap-2.5 cursor-pointer group"
           >
             <div className="relative size-8 sm:size-9 rounded-lg overflow-hidden ring-1 ring-black/5 dark:ring-white/10 transition-transform duration-200 group-hover:scale-105">
@@ -198,7 +214,7 @@ export function Header() {
             <Badge className="bg-green-500/90 hover:bg-green-500 text-white border-0 text-[10px] font-semibold tracking-wide mr-1 sm:mr-2 px-2 py-0.5 h-6 shadow-sm animate-in fade-in slide-in-from-right-2 duration-200">
               KIDS MODE
             </Badge>
-            )}
+          )}
 
           {/* Mobile Date/Time */}
           <div className="md:hidden flex items-center gap-1 text-[10px] text-muted-foreground tabular-nums mr-1">
@@ -208,7 +224,10 @@ export function Header() {
 
           <QualitySettings />
 
-          {/* Enhanced Theme Toggle with dropdown */}
+          {/* Theme Preset Selector (50 themes) */}
+          <ThemeSelector />
+
+          {/* Dark/Light/System toggle */}
           <ThemeToggle />
 
           <Button
@@ -228,7 +247,9 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => useMusicStore.setState({ view: 'car' })}
+            onClick={() => {
+              setTimeout(() => useMusicStore.setState({ view: 'car' }), 0);
+            }}
             className="size-9 text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-200"
             aria-label="Car mode"
           >

@@ -59,6 +59,10 @@ interface MusicStore {
   sidebarOpen: boolean;
   currentArtist: ArtistData | null;
 
+  // Theme state
+  themePresetId: string | null;
+  autoThemeEnabled: boolean;
+
   // Actions
   setView: (view: ViewMode) => void;
   playTrack: (track: Track) => void;
@@ -85,6 +89,8 @@ interface MusicStore {
   openArtistView: (artistName: string) => void;
   toggleAutoPlay: () => void;
   setIsLoading: (loading: boolean) => void;
+  setThemePresetId: (id: string | null) => void;
+  setAutoThemeEnabled: (enabled: boolean) => void;
 }
 
 export const useMusicStore = create<MusicStore>((set, get) => ({
@@ -110,6 +116,8 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
   carAudioMode: false,
   sidebarOpen: false,
   currentArtist: null,
+  themePresetId: null,
+  autoThemeEnabled: true,
 
   setView: (view) => set({ view }),
   playTrack: (track) => set({
@@ -207,6 +215,8 @@ export const useMusicStore = create<MusicStore>((set, get) => ({
   setCurrentArtist: (artist) => set({ currentArtist: artist }),
   toggleAutoPlay: () => set((s) => ({ autoPlay: !s.autoPlay })),
   setIsLoading: (loading) => set({ isLoading: loading }),
+  setThemePresetId: (id) => set({ themePresetId: id }),
+  setAutoThemeEnabled: (enabled) => set({ autoThemeEnabled: enabled }),
   openArtistView: (artistName: string) => {
     set({
       currentArtist: {

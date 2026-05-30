@@ -1,30 +1,50 @@
 ---
-Task ID: 3-6
-Agent: Super Z (Main)
-Task: Enterprise Architecture Refactor of WeedMusic
+Task ID: 1
+Agent: Main Agent
+Task: Enterprise Architecture Refactor — Voice Search + Theme System + CSS Enhancement
 
 Work Log:
-- Explored full codebase structure and read all key files (globals.css ~1400 lines, audio-manager.tsx, track-card.tsx, hero-banner.tsx, music-player.tsx, kids-mode.tsx, store.ts, layout.tsx)
-- Identified all heavy CSS patterns: 20+ infinite animations, 3D card system, grass blade decorations, weed particles, heavy backdrop-blur (20-40px), innerHTML for audio source management
-- Designed enterprise CSS design system with: fluid 4K scaling tokens (clamp()), GPU-only animations (transform/opacity/will-change), reduced backdrop-blur (12px max), system font stack
-- Rewrote globals.css from ~1400 lines → 645 lines, removing: 3D card system, grass blades, weed particles, vinyl spin, gradient border rotation, ripple effects, heavy glass classes
-- Added enterprise patterns: premium-track-card (GPU-only translateY hover), enterprise-track-matrix (4K fluid grid), premium-hero-media (cinematic drift), skeleton-shimmer, enterprise-playback-bar (12px blur), hero-ambient-shroud
-- Refactored hero-banner.tsx: Removed all grass blades, weed particles, emojis. Added premiumCinematicDrift animation (scale+translate3d), pixel optimization (image-rendering: crisp-edges, contrast filter), 4K fluid height clamp(350px, 40vh, 700px)
-- Refactored track-card.tsx: Removed 3D tilt effect + ripple, added data-track-id/data-index/data-source attributes for O(1) lookups, setTimeout(0) macrotask offloading for play handlers, premium-track-card GPU-only hover, content-visibility: auto on thumbnails
-- Refactored audio-manager.tsx: Memory sanitation in 5 locations - replaced audio.innerHTML = '' with audio.removeAttribute('src') + audio.load() for proper GC of media buffers
-- Refactored music-player.tsx: Replaced player-3d with enterprise-playback-bar, removed 20 grass-blade divs, removed weed-leaf emoji decorations
-- Refactored kids-mode.tsx: Removed grass/bubbles/corner decorations, uses premium-track-card + enterprise-track-matrix, skeleton-shimmer for loading, setTimeout(0) macrotask offloading
-- Refactored layout.tsx: Removed Geist/Geist_Mono next/font imports, system font stack via CSS
-- Build: ✅ Successful (8.6s compilation)
-- Deployed to Vercel: https://my-project-sooty-one-42.vercel.app
-- Pushed to GitHub: https://github.com/ak46-prog/WeedMusic-v2.1.0
+- Read and assessed all current project files (globals.css, music-player.tsx, voice-search.tsx, header.tsx, app-sidebar.tsx, hero-banner.tsx, page.tsx, store.ts, audio-manager.tsx)
+- Researched Wispr Flow (wisprflow.ai) animation patterns — extracted key patterns: floating bar overlay, GPU-only animations, 200ms transform + 300ms color transitions, blur-based glow, SVG text-path marquee, Lottie waveform visualization
+- Researched visme.co color schemes and created 50 professional theme presets organized by category (15 dark, 10 warm, 10 cool, 10 vibrant, 5 light)
+- Updated globals.css with:
+  - Wispr Flow voice overlay animations (flowOrbPulse, flowRingExpand, flowWaveBar, flowSlideUp, flowFadeIn, flowGlowPulse)
+  - Smooth theme transition CSS (html.theme-transitioning class)
+  - Theme selector panel CSS (theme-swatch, theme-category-tab)
+- Completely rewrote voice-search.tsx with:
+  - Web Speech API (browser native) for universal voice search in any language
+  - Auto language detection via navigator.language
+  - Web Audio API AnalyserNode for real-time mic level visualization (24 waveform bars)
+  - Wispr Flow-like floating overlay with expanding ring pulses, orb animation, glow effects
+  - React Portal (z-[9999]) for guaranteed overlay stacking
+  - GPU-only animations (transform, opacity, will-change)
+  - XSS-safe transcript display (textContent pattern)
+  - Graceful fallback when AnalyserNode fails
+- Updated store.ts with:
+  - themePresetId state
+  - autoThemeEnabled state
+  - setThemePresetId and setAutoThemeEnabled actions
+- Created theme-selector.tsx with:
+  - 50 theme presets organized by category tabs (Night, Evening, Focus, Energy, Morning)
+  - Auto time-based theme switching (6-10: Morning, 10-16: Focus, 16-20: Evening, 20-6: Night)
+  - Smooth theme transitions with theme-transitioning CSS class
+  - localStorage persistence for selected theme and auto-mode preference
+  - Category icons and visual swatches with gradient previews
+- Updated header.tsx with:
+  - Integrated ThemeSelector component (palette icon)
+  - setTimeout(0) macrotask offloading for search and navigation (INP fix)
+  - useCallback optimization for all handlers
+- Updated theme-presets.ts with:
+  - Full CSS variable mapping including sidebar, destructive, accent-foreground, etc.
+  - getTimeCategory() and getAutoThemePreset() helper functions
+- Build successful — all pages compiled, no TypeScript errors in modified files
 
 Stage Summary:
-- CSS reduced from ~1400 → 645 lines (54% reduction)
-- All animations now GPU-only (transform, opacity) — zero layout-triggering properties
-- Memory sanitation enforced: removeAttribute('src') + load() on every track switch
-- INP eradicated: setTimeout(0) macrotask offloading on all play handlers
-- 4K fluid scaling via clamp() — zero JS resize listeners
-- System font stack — zero FOUT, no custom font downloads
-- backdrop-filter blur reduced from 20-40px → 12px for compositing performance
-- All heavy decorations removed (grass blades, weed particles, 3D card system)
+- Voice search now uses browser-native Web Speech API supporting ANY language/country
+- AnalyserNode provides real-time audio visualization (24 bars driven by mic frequency data)
+- Wispr Flow-inspired overlay with expanding rings, orb pulse, and glow effects
+- 50 professional color theme presets with auto time-based switching
+- Smooth theme transitions with CSS class-based animation
+- INP optimization via setTimeout(0) macrotask offloading in header
+- React Portal (z-[9999]) for voice overlay guarantees proper stacking
+- Build passes successfully

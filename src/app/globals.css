@@ -389,6 +389,87 @@ input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 }
 .voice-pulse { animation: voice-pulse 1.5s ease-in-out infinite; }
 
+/* ---- Wispr Flow Voice Overlay (GPU-only animations) ---- */
+@keyframes flowOrbPulse {
+  0% { transform: scale(1) translateZ(0); opacity: 0.6; }
+  50% { transform: scale(1.08) translateZ(0); opacity: 1; }
+  100% { transform: scale(1) translateZ(0); opacity: 0.6; }
+}
+@keyframes flowRingExpand {
+  0% { transform: scale(0.8) translateZ(0); opacity: 0.6; }
+  100% { transform: scale(2.2) translateZ(0); opacity: 0; }
+}
+@keyframes flowWaveBar {
+  0%, 100% { transform: scaleY(0.15) translateZ(0); }
+  50% { transform: scaleY(1) translateZ(0); }
+}
+@keyframes flowSlideUp {
+  from { transform: translateY(30px) translateZ(0); opacity: 0; }
+  to { transform: translateY(0) translateZ(0); opacity: 1; }
+}
+@keyframes flowFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes flowGlowPulse {
+  0%, 100% { box-shadow: 0 0 20px 4px oklch(0.65 0.2 55 / 0.15); }
+  50% { box-shadow: 0 0 40px 8px oklch(0.65 0.2 55 / 0.3); }
+}
+
+/* Flow overlay background */
+.flow-overlay {
+  animation: flowFadeIn 0.2s ease-out forwards;
+}
+/* Flow content container */
+.flow-content {
+  animation: flowSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+/* Flow orb pulse */
+.flow-orb {
+  animation: flowOrbPulse 2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+/* Flow expanding rings */
+.flow-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid oklch(0.65 0.2 55 / 0.3);
+  animation: flowRingExpand 2.5s ease-out infinite;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+.flow-ring:nth-child(2) { animation-delay: 0.8s; }
+.flow-ring:nth-child(3) { animation-delay: 1.6s; }
+/* Flow wave bars (Wispr-style waveform) */
+.flow-wave-bar {
+  display: inline-block;
+  width: 3px;
+  border-radius: 2px;
+  background: oklch(0.65 0.2 55);
+  transform-origin: bottom;
+  will-change: transform;
+  transition: height 0.1s ease-out;
+}
+.flow-wave-bar.active {
+  animation: flowWaveBar 0.6s ease-in-out infinite;
+}
+/* Flow glow effect */
+.flow-glow {
+  animation: flowGlowPulse 2s ease-in-out infinite;
+}
+/* Flow transcript text appearance */
+.flow-transcript {
+  animation: flowSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ---- Smooth Theme Transitions ---- */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 0.4s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
 /* ---- Hero Ambient Shroud ---- */
 .hero-ambient-shroud {
   position: absolute;
@@ -642,4 +723,39 @@ input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
   .sidebar-collapsible.sidebar-open {
     transform: translateX(0);
   }
+}
+
+/* ---- Theme Selector Panel ---- */
+.theme-swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+  will-change: transform;
+  border: 2px solid transparent;
+}
+.theme-swatch:hover {
+  transform: scale(1.1) translateZ(0);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.theme-swatch.active {
+  border-color: oklch(0.65 0.2 55);
+  box-shadow: 0 0 0 2px oklch(0.65 0.2 55 / 0.3);
+}
+.theme-category-tab {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+.theme-category-tab:hover {
+  background: oklch(0.65 0.2 55 / 0.1);
+}
+.theme-category-tab.active {
+  background: oklch(0.65 0.2 55);
+  color: white;
 }
